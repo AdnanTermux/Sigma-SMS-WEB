@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>SigmaFetcher — Virtual SMS Numbers</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#03050f;--s1:#080d1e;--s2:#0d1530;
+  --b1:rgba(79,140,255,.1);--b2:rgba(79,140,255,.2);--b3:rgba(79,140,255,.38);
+  --c1:#4f8cff;--c2:#00d4ff;--c3:#a855f7;--c4:#10b981;--c5:#f59e0b;--cr:#ef4444;
+  --txt:#e2eaff;--muted:#5a6a94;--muted2:#8899bb;
+  --glow1:0 0 40px rgba(79,140,255,.25);
+  --glow2:0 0 80px rgba(79,140,255,.12);
+  --grad:linear-gradient(135deg,var(--c1),var(--c2));
+  --grad2:linear-gradient(135deg,var(--c1),var(--c3));
+  --fh:'Orbitron',sans-serif;
+  --fb:'Space Grotesk',sans-serif;
+  --fm:'JetBrains Mono',monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--txt);font-family:var(--fb);overflow-x:hidden;min-height:100vh}
+
+/* Orbs */
+.orbs{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.orb{position:absolute;border-radius:50%;filter:blur(90px);opacity:.15;animation:orbF linear infinite}
+.orb1{width:700px;height:700px;background:radial-gradient(var(--c1),transparent 70%);top:-250px;left:-150px;animation-duration:22s}
+.orb2{width:550px;height:550px;background:radial-gradient(var(--c3),transparent 70%);top:35%;right:-180px;animation-duration:28s;animation-delay:-9s}
+.orb3{width:450px;height:450px;background:radial-gradient(var(--c2),transparent 70%);bottom:-120px;left:35%;animation-duration:19s;animation-delay:-14s}
+@keyframes orbF{0%{transform:translateY(0) scale(1)}40%{transform:translateY(-70px) scale(1.06)}70%{transform:translateY(45px) scale(.94)}100%{transform:translateY(0) scale(1)}}
+
+/* Grid */
+body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:linear-gradient(rgba(79,140,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(79,140,255,.03) 1px,transparent 1px);
+  background-size:64px 64px}
+
+/* Scanlines */
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.025) 3px,rgba(0,0,0,.025) 4px)}
+
+/* ── NAV ─────────────────────────────────────────────────────────── */
+nav{position:fixed;top:0;left:0;right:0;z-index:200;height:68px;
+  display:flex;align-items:center;justify-content:space-between;padding:0 2.5rem;
+  background:rgba(3,5,15,.7);backdrop-filter:blur(24px);border-bottom:1px solid var(--b1);
+  transition:all .3s}
+nav.scrolled{background:rgba(3,5,15,.92);border-bottom-color:var(--b2)}
+.logo{display:flex;align-items:center;gap:12px;text-decoration:none;
+  font-family:var(--fh);font-weight:700;font-size:1.1rem;letter-spacing:.08em;color:var(--txt)}
+.logo-mark{width:36px;height:36px;border-radius:10px;background:var(--grad);
+  display:flex;align-items:center;justify-content:center;font-size:17px;
+  box-shadow:0 0 20px rgba(79,140,255,.4);position:relative;overflow:hidden}
+.logo-mark::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.2),transparent);border-radius:10px}
+.logo-txt{display:flex;align-items:center;gap:6px}
+.logo-txt span{color:var(--c2)}
+.logo-ver{font-family:var(--fm);font-size:.58rem;color:var(--c4);background:rgba(16,185,129,.1);
+  border:1px solid rgba(16,185,129,.25);border-radius:4px;padding:2px 7px}
+.nav-links{display:flex;align-items:center;gap:2.5rem}
+.nav-links a{color:var(--muted2);text-decoration:none;font-size:.82rem;font-weight:500;
+  letter-spacing:.05em;transition:color .2s}
+.nav-links a:hover{color:var(--txt)}
+.nav-btns{display:flex;gap:10px;align-items:center}
+.nav-user{font-size:.78rem;color:var(--c4);font-family:var(--fm);padding:0 4px}
+
+/* ── BUTTONS ─────────────────────────────────────────────────────── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  padding:9px 22px;border-radius:10px;border:none;
+  font-family:var(--fb);font-size:.82rem;font-weight:600;
+  cursor:pointer;transition:all .25s;text-decoration:none;white-space:nowrap}
+.btn-glass{background:rgba(255,255,255,.04);border:1px solid var(--b2);color:var(--muted2);backdrop-filter:blur(8px)}
+.btn-glass:hover{background:rgba(79,140,255,.1);border-color:var(--b3);color:var(--c1)}
+.btn-prime{background:var(--grad2);color:#fff;
+  box-shadow:0 0 24px rgba(79,140,255,.35),inset 0 1px 0 rgba(255,255,255,.12);
+  position:relative;overflow:hidden}
+.btn-prime::before{content:'';position:absolute;top:-50%;left:-60%;width:40%;height:200%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.15),transparent);
+  transform:skewX(-20deg);transition:left .6s}
+.btn-prime:hover{transform:translateY(-2px);box-shadow:0 0 40px rgba(79,140,255,.55)}
+.btn-prime:hover::before{left:140%}
+.btn-sm{padding:6px 16px;font-size:.78rem;border-radius:8px}
+.btn-lg{padding:13px 32px;font-size:.95rem;border-radius:12px}
+.btn-full{width:100%}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none!important}
+
+/* ── HERO ────────────────────────────────────────────────────────── */
+.hero{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;text-align:center;padding:7rem 2rem 4rem}
+.hero-eye{display:inline-flex;align-items:center;gap:8px;
+  background:rgba(79,140,255,.08);border:1px solid rgba(79,140,255,.2);border-radius:100px;
+  padding:6px 18px;font-family:var(--fm);font-size:.68rem;letter-spacing:.12em;
+  color:var(--c2);margin-bottom:2.5rem;animation:fu .7s both}
+.hero-eye::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--c4);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,.6)}50%{box-shadow:0 0 0 7px rgba(16,185,129,0)}}
+h1{font-family:var(--fh);font-weight:900;font-size:clamp(2.5rem,7vw,5.6rem);
+  line-height:1;letter-spacing:-.02em;margin-bottom:1.8rem;animation:fu .7s .1s both}
+.h1a{display:block;color:var(--txt)}
+.h1b{display:block;background:linear-gradient(135deg,var(--c1) 0%,var(--c2) 45%,var(--c3) 100%);
+  background-size:200% 200%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  animation:gs 4s ease-in-out infinite}
+@keyframes gs{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+.hero-sub{max-width:560px;color:var(--muted2);font-size:1rem;line-height:1.85;
+  margin-bottom:3rem;animation:fu .7s .2s both}
+.hero-cta{display:flex;gap:14px;margin-bottom:5rem;animation:fu .7s .3s both;flex-wrap:wrap;justify-content:center}
+@keyframes fu{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
+
+/* Stat strip */
+.sstrip{display:flex;width:100%;max-width:780px;border:1px solid var(--b2);border-radius:20px;
+  overflow:hidden;background:rgba(8,13,30,.8);backdrop-filter:blur(16px);
+  animation:fu .7s .4s both;box-shadow:var(--glow2)}
+.ssi{flex:1;padding:1.5rem;display:flex;flex-direction:column;gap:6px;
+  border-right:1px solid var(--b1);transition:background .3s;position:relative;overflow:hidden}
+.ssi:last-child{border-right:none}
+.ssi::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:var(--grad);transform:scaleX(0);transition:transform .4s;transform-origin:left}
+.ssi:hover{background:rgba(79,140,255,.04)}
+.ssi:hover::before{transform:scaleX(1)}
+.sn{font-family:var(--fh);font-weight:700;font-size:2rem;letter-spacing:-.02em;color:var(--txt)}
+.sn .u{color:var(--c2);font-size:1.3rem}
+.sl{font-size:.65rem;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;font-family:var(--fm)}
+
+/* ── SECTION ─────────────────────────────────────────────────────── */
+.sec{position:relative;z-index:1;max-width:1280px;margin:0 auto;padding:6rem 2.5rem}
+.sec-tag{display:inline-flex;align-items:center;gap:6px;font-family:var(--fm);font-size:.65rem;
+  color:var(--c1);letter-spacing:.15em;text-transform:uppercase;margin-bottom:.9rem}
+.sec-tag::before{content:'';width:20px;height:1px;background:var(--c1)}
+.sec-h{font-family:var(--fh);font-weight:700;font-size:clamp(1.5rem,3.5vw,2.4rem);letter-spacing:-.02em;margin-bottom:.6rem}
+.sec-s{color:var(--muted2);font-size:.9rem;max-width:500px;line-height:1.7;margin-bottom:3rem}
+.divider{height:1px;background:linear-gradient(90deg,transparent,var(--b2),transparent);position:relative;z-index:1}
+
+/* Panels */
+.pgrid{display:flex;flex-wrap:wrap;gap:14px}
+.pc{flex:1 1 200px;background:linear-gradient(145deg,rgba(13,21,48,.9),rgba(8,13,30,.9));
+  border:1px solid var(--b1);border-radius:16px;padding:1.5rem;
+  display:flex;flex-direction:column;gap:12px;position:relative;overflow:hidden;transition:all .35s}
+.pc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:var(--grad);opacity:0;transition:opacity .35s}
+.pc:hover{border-color:var(--b3);transform:translateY(-4px);box-shadow:var(--glow1)}
+.pc:hover::before{opacity:1}
+.pc-top{display:flex;justify-content:space-between;align-items:flex-start}
+.pc-name{font-family:var(--fh);font-weight:700;font-size:.88rem;letter-spacing:.04em}
+.spill{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:100px;
+  font-size:.62rem;font-weight:600;font-family:var(--fm)}
+.sp-online{background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.25);color:var(--c4)}
+.sp-offline{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.25);color:var(--cr)}
+.sp-unknown{background:rgba(90,106,148,.12);border:1px solid rgba(90,106,148,.25);color:var(--muted2)}
+.sdot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.sdot.on{background:var(--c4);animation:pulse 2s infinite}
+.sdot.off{background:var(--cr)}
+.sdot.unk{background:var(--muted)}
+.pc-meta{font-size:.72rem;color:var(--muted);font-family:var(--fm)}
+.pc-meta span{color:var(--c2)}
+.pc-bar{height:2px;background:var(--b1);border-radius:1px;overflow:hidden}
+.pc-fill{height:100%;background:var(--grad);border-radius:1px;transition:width 1.2s ease}
+
+/* Filters */
+.fwrap{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:2rem}
+.fbt{padding:6px 16px;border-radius:100px;border:1px solid var(--b1);background:transparent;
+  color:var(--muted2);font-family:var(--fm);font-size:.7rem;cursor:pointer;transition:all .2s}
+.fbt:hover{border-color:var(--b3);color:var(--c1)}
+.fbt.active{border-color:var(--c1);color:var(--c1);background:rgba(79,140,255,.1);box-shadow:0 0 10px rgba(79,140,255,.2)}
+
+/* Number cards */
+.ngrid{display:flex;flex-wrap:wrap;gap:12px}
+.nc{flex:1 1 270px;background:linear-gradient(145deg,rgba(13,21,48,.95),rgba(8,13,30,.9));
+  border:1px solid var(--b1);border-radius:14px;padding:1.2rem 1.4rem;
+  display:flex;align-items:center;gap:14px;transition:all .3s;position:relative;overflow:hidden}
+.nc::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;
+  background:var(--grad);opacity:0;transition:opacity .3s}
+.nc:hover{border-color:var(--b3);transform:translateX(5px);box-shadow:var(--glow1)}
+.nc:hover::before{opacity:1}
+.nflag{font-size:2.2rem;line-height:1;flex-shrink:0}
+.nbody{flex:1;min-width:0}
+.ncountry{font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px;font-family:var(--fm)}
+.nnum{font-family:var(--fm);font-weight:500;font-size:.95rem;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.npanel{font-size:.62rem;color:var(--c1);margin-top:3px;font-family:var(--fm)}
+.nact{flex-shrink:0;padding:7px 18px;border-radius:9px;font-size:.75rem}
+
+/* Features */
+.fgrid{display:flex;flex-wrap:wrap;gap:16px}
+.fc{flex:1 1 220px;background:linear-gradient(145deg,rgba(13,21,48,.9),rgba(8,13,30,.8));
+  border:1px solid var(--b1);border-radius:16px;padding:2rem;transition:all .35s}
+.fc:hover{border-color:var(--b3);transform:translateY(-4px);box-shadow:var(--glow1)}
+.fi{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;
+  font-size:24px;margin-bottom:1.25rem}
+.fi.b{background:rgba(79,140,255,.12)}
+.fi.c{background:rgba(0,212,255,.1)}
+.fi.p{background:rgba(168,85,247,.1)}
+.fi.g{background:rgba(16,185,129,.1)}
+.ft{font-family:var(--fh);font-weight:600;font-size:.88rem;letter-spacing:.03em;margin-bottom:.6rem}
+.fd{color:var(--muted2);font-size:.8rem;line-height:1.75}
+
+/* Ticker */
+.ticker-wrap{position:relative;z-index:1;overflow:hidden;border-top:1px solid var(--b1);
+  border-bottom:1px solid var(--b1);background:rgba(8,13,30,.6);padding:10px 0}
+.ticker{display:flex;animation:tick 30s linear infinite;width:max-content}
+.tick-item{padding:0 3rem;font-size:.7rem;font-family:var(--fm);color:var(--muted);white-space:nowrap}
+.tick-item span{color:var(--c2)}
+@keyframes tick{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+
+/* ── MODAL ────────────────────────────────────────────────────────── */
+.overlay{position:fixed;inset:0;z-index:300;display:none;align-items:center;justify-content:center;
+  padding:1rem;background:rgba(3,5,15,.82);backdrop-filter:blur(18px)}
+.overlay.open{display:flex}
+.modal{background:linear-gradient(145deg,#0d1530,#080d1e);border:1px solid var(--b2);
+  border-radius:22px;padding:2.5rem;width:100%;max-width:420px;
+  box-shadow:0 0 80px rgba(79,140,255,.2),var(--glow1);
+  animation:mIn .35s cubic-bezier(.34,1.56,.64,1);position:relative}
+@keyframes mIn{from{opacity:0;transform:scale(.88) translateY(24px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.mcls{position:absolute;top:1.2rem;right:1.2rem;background:rgba(255,255,255,.04);
+  border:1px solid var(--b1);width:32px;height:32px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--muted);cursor:pointer;transition:all .2s;font-size:.9rem}
+.mcls:hover{background:rgba(79,140,255,.12);border-color:var(--b3);color:var(--txt)}
+.mtitle{font-family:var(--fh);font-weight:700;font-size:1.35rem;letter-spacing:-.01em;margin-bottom:.4rem}
+.msub{color:var(--muted);font-size:.75rem;margin-bottom:1.75rem;font-family:var(--fm)}
+.atabs{display:flex;border:1px solid var(--b1);border-radius:12px;overflow:hidden;margin-bottom:1.75rem}
+.atab{flex:1;padding:10px;background:transparent;border:none;color:var(--muted);
+  font-family:var(--fb);font-size:.82rem;font-weight:600;cursor:pointer;transition:all .25s}
+.atab.active{background:var(--grad2);color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.1)}
+.fg{margin-bottom:1.1rem}
+.fg label{display:block;font-size:.65rem;color:var(--muted);letter-spacing:.1em;
+  text-transform:uppercase;font-family:var(--fm);margin-bottom:6px}
+.fg input{width:100%;padding:11px 14px;background:rgba(79,140,255,.04);
+  border:1px solid var(--b1);border-radius:10px;color:var(--txt);
+  font-family:var(--fm);font-size:.85rem;outline:none;transition:all .2s}
+.fg input:focus{border-color:var(--b3);background:rgba(79,140,255,.08);box-shadow:0 0 0 3px rgba(79,140,255,.12)}
+.fg input::placeholder{color:var(--muted)}
+.aerr{color:var(--cr);font-size:.75rem;background:rgba(239,68,68,.08);
+  border:1px solid rgba(239,68,68,.2);border-radius:8px;padding:9px 12px;
+  margin-bottom:1rem;display:none;font-family:var(--fm);animation:fu .2s}
+.aerr.show{display:block}
+
+/* SMS modal */
+.sms-modal{max-width:500px}
+.num-display{background:rgba(79,140,255,.06);border:1px solid var(--b2);border-radius:12px;
+  padding:1rem 1.25rem;margin-bottom:1.25rem;font-family:var(--fm);font-size:1rem;color:var(--c2);
+  display:flex;align-items:center;gap:10px}
+.num-display .flag{font-size:1.4rem}
+.cpybtn{margin-left:auto;padding:5px 12px;border-radius:7px;font-size:.65rem;
+  border:1px solid var(--b2);background:transparent;color:var(--muted);cursor:pointer;
+  transition:all .2s;font-family:var(--fm)}
+.cpybtn:hover{border-color:var(--c1);color:var(--c1)}
+.poll-bar{height:2px;background:var(--b1);border-radius:1px;margin-bottom:1rem;overflow:hidden}
+.poll-fill{height:100%;background:var(--grad);width:0;transition:width 5s linear}
+.inbox{display:flex;flex-direction:column;gap:10px;max-height:300px;overflow-y:auto;
+  padding-right:4px;margin-bottom:1.5rem}
+.inbox::-webkit-scrollbar{width:4px}
+.inbox::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px}
+.sms-item{background:rgba(13,21,48,.8);border:1px solid var(--b1);border-radius:12px;
+  padding:1rem 1.1rem;animation:fu .3s ease}
+.sms-from{font-size:.65rem;color:var(--c1);font-family:var(--fm);margin-bottom:5px}
+.sms-text{font-size:.9rem;color:var(--txt);line-height:1.6;word-break:break-word}
+.sms-otp{display:inline-block;margin-top:7px;font-family:var(--fm);font-size:1.15rem;
+  font-weight:700;color:var(--c4);background:rgba(16,185,129,.1);
+  border:1px solid rgba(16,185,129,.25);border-radius:8px;padding:3px 14px;letter-spacing:.2em}
+.sms-ts{font-size:.62rem;color:var(--muted);font-family:var(--fm);margin-top:5px}
+.inbox-empty{text-align:center;padding:2.5rem;color:var(--muted);font-family:var(--fm);font-size:.78rem}
+.spinner{display:block;margin:0 auto 12px;width:24px;height:24px;
+  border:2px solid var(--b2);border-top-color:var(--c1);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.sms-actions{display:flex;gap:10px}
+
+/* Scroll reveal */
+.rev{opacity:0;transform:translateY(32px);transition:opacity .75s ease,transform .75s ease}
+.rev.vis{opacity:1;transform:translateY(0)}
+
+/* Footer */
+footer{position:relative;z-index:1;border-top:1px solid var(--b1);
+  padding:2rem 2.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem}
+.flink{font-size:.75rem;color:var(--muted);text-decoration:none;transition:color .2s}
+.flink:hover{color:var(--txt)}
+
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:rgba(79,140,255,.2);border-radius:3px}
+
+@media(max-width:640px){
+  nav{padding:0 1.25rem}.nav-links{display:none}
+  .hero{padding:6rem 1.25rem 3rem}.sec{padding:4rem 1.25rem}
+  .sstrip{flex-direction:column}.ssi{border-right:none;border-bottom:1px solid var(--b1)}
+  .ssi:last-child{border-bottom:none}
+  .hero-cta{flex-direction:column;width:100%}.btn-lg{width:100%}
+  footer{padding:1.5rem 1.25rem}
+}
+</style>
+</head>
+<body>
+
+<div class="orbs"><div class="orb orb1"></div><div class="orb orb2"></div><div class="orb orb3"></div></div>
+<canvas id="cv"></canvas>
+
+<!-- NAV -->
+<nav id="nav">
+  <a href="/" class="logo">
+    <div class="logo-mark">⚡</div>
+    <div class="logo-txt">SIGMA<span>FETCHER</span><span class="logo-ver">V10</span></div>
+  </a>
+  <div class="nav-links">
+    <a href="#panels">Panels</a>
+    <a href="#numbers">Numbers</a>
+    <a href="#features">Features</a>
+    {% if user and user.is_admin %}<a href="/admin">⚙ Admin</a>{% endif %}
+  </div>
+  <div class="nav-btns">
+    {% if user %}
+      <span class="nav-user">● {{ user.username }}</span>
+      {% if user.is_admin %}
+        <a href="/admin" class="btn btn-glass btn-sm">Dashboard</a>
+      {% endif %}
+      <a href="/logout" class="btn btn-glass btn-sm">Log out</a>
+    {% else %}
+      <button class="btn btn-glass btn-sm" onclick="openAuth('login')">Log in</button>
+      <button class="btn btn-prime btn-sm" onclick="openAuth('signup')">Sign up →</button>
+    {% endif %}
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-eye">● SYSTEM ONLINE — ALL PANELS ACTIVE</div>
+  <h1>
+    <span class="h1a">RECEIVE SMS</span>
+    <span class="h1b">INSTANTLY.</span>
+  </h1>
+  <p class="hero-sub">Virtual phone numbers across 14 global panels. Real SMS in under 3 seconds — no SIM required.</p>
+  <div class="hero-cta">
+    {% if user %}
+      <a href="#numbers" class="btn btn-prime btn-lg">Browse Numbers →</a>
+    {% else %}
+      <button class="btn btn-prime btn-lg" onclick="openAuth('signup')">Start for free →</button>
+      <a href="#numbers" class="btn btn-glass btn-lg">Browse numbers</a>
+    {% endif %}
+  </div>
+  <div class="sstrip">
+    <div class="ssi">
+      <div class="sn" id="sp">{{ panels|length }}<span class="u"></span></div>
+      <div class="sl">Active panels</div>
+    </div>
+    <div class="ssi">
+      <div class="sn" id="sn">{{ numbers|length }}<span class="u">+</span></div>
+      <div class="sl">Numbers live</div>
+    </div>
+    <div class="ssi">
+      <div class="sn">110<span class="u">+</span></div>
+      <div class="sl">Countries</div>
+    </div>
+    <div class="ssi">
+      <div class="sn">&lt;3<span class="u">s</span></div>
+      <div class="sl">Avg delivery</div>
+    </div>
+  </div>
+</section>
+
+<!-- TICKER -->
+<div class="ticker-wrap">
+  <div class="ticker">
+    {% for n in numbers[:10] %}
+    <div class="tick-item">{{ n.country_flag or '🌐' }} {{ n.country_name }} — <span>{{ n.number }}</span></div>
+    {% else %}
+    <div class="tick-item">⚡ SigmaFetcher V10 — <span>LIVE</span></div>
+    <div class="tick-item">📱 Virtual Numbers — <span>GLOBAL COVERAGE</span></div>
+    <div class="tick-item">🔌 14 Panels — <span>ACTIVE</span></div>
+    {% endfor %}
+    {% for n in numbers[:10] %}
+    <div class="tick-item">{{ n.country_flag or '🌐' }} {{ n.country_name }} — <span>{{ n.number }}</span></div>
+    {% else %}
+    <div class="tick-item">⚡ SigmaFetcher V10 — <span>LIVE</span></div>
+    <div class="tick-item">📱 Virtual Numbers — <span>GLOBAL COVERAGE</span></div>
+    <div class="tick-item">🔌 14 Panels — <span>ACTIVE</span></div>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- PANELS -->
+<section class="sec rev" id="panels">
+  <div class="sec-tag">Live Infrastructure</div>
+  <h2 class="sec-h">Active Panels</h2>
+  <p class="sec-s">Global servers pulling real numbers and SMS in real-time.</p>
+  <div class="pgrid">
+    {% for p in panels %}
+    {% set avail = p.numbers.filter_by(is_available=True).count() %}
+    {% set total = p.numbers.count() %}
+    <div class="pc">
+      <div class="pc-top">
+        <div class="pc-name">{{ p.name }}</div>
+        <div class="spill sp-{{ p.status }}">
+          <div class="sdot {{ 'on' if p.status=='online' else 'off' if p.status=='offline' else 'unk' }}"></div>
+          {{ p.status }}
+        </div>
+      </div>
+      <div class="pc-meta">Numbers: <span>{{ avail }}</span> / {{ total }}</div>
+      <div class="pc-meta">Type: <span>{{ p.panel_type }}</span></div>
+      <div class="pc-bar">
+        <div class="pc-fill" style="width:{{ ((avail / total * 100)|int) if total > 0 else 0 }}%"></div>
+      </div>
+    </div>
+    {% else %}
+    <p style="color:var(--muted);font-size:.85rem">No panels configured yet. Admin can add panels from the dashboard.</p>
+    {% endfor %}
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- NUMBERS -->
+<section class="sec rev" id="numbers">
+  <div class="sec-tag">Available Now</div>
+  <h2 class="sec-h">Browse Numbers</h2>
+  <p class="sec-s">Select a number and start receiving SMS instantly.</p>
+  <div class="fwrap" id="fwrap">
+    <button class="fbt active" onclick="filterBy('',event)">All countries</button>
+  </div>
+  <div class="ngrid" id="ngrid">
+    {% for n in numbers %}
+    <div class="nc" data-cc="{{ n.country_code or '' }}">
+      <div class="nflag">{{ n.country_flag or '🌐' }}</div>
+      <div class="nbody">
+        <div class="ncountry">{{ n.country_name or 'Unknown' }}</div>
+        <div class="nnum">{{ n.number }}</div>
+        <div class="npanel">{{ n.panel.name if n.panel else '—' }}</div>
+      </div>
+      {% if user %}
+        <button class="btn btn-prime nact btn-sm"
+          onclick="getNumber({{ n.id }}, this, '{{ n.number }}', '{{ n.country_flag or '🌐' }}')">Get</button>
+      {% else %}
+        <button class="btn btn-glass nact btn-sm" onclick="openAuth('login')">Login</button>
+      {% endif %}
+    </div>
+    {% else %}
+    <div style="color:var(--muted);font-size:.88rem;padding:3rem 0;width:100%">
+      No numbers available right now. Admin needs to add panels and upload numbers.
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- FEATURES -->
+<section class="sec rev" id="features">
+  <div class="sec-tag">Why SigmaFetcher</div>
+  <h2 class="sec-h">Built Different</h2>
+  <p class="sec-s">Everything a serious SMS platform needs.</p>
+  <div class="fgrid">
+    <div class="fc"><div class="fi b">⚡</div><div class="ft">INSTANT DELIVERY</div><div class="fd">Live SMS polling every 5 seconds. Messages appear the moment they hit the server.</div></div>
+    <div class="fc"><div class="fi c">🌐</div><div class="ft">GLOBAL COVERAGE</div><div class="fd">110+ countries supported with redundant panel backup across every major region.</div></div>
+    <div class="fc"><div class="fi p">🔌</div><div class="ft">14 PANELS</div><div class="fd">Multiple servers run in parallel. If one is slow, another picks up instantly.</div></div>
+    <div class="fc"><div class="fi g">🛡️</div><div class="ft">ISOLATED SESSIONS</div><div class="fd">Each panel has its own HTTP session and cookie jar. Your activity stays private.</div></div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<footer>
+  <a href="/" class="logo" style="font-size:.9rem">
+    <div class="logo-mark" style="width:28px;height:28px;font-size:13px">⚡</div>
+    <div class="logo-txt">SIGMA<span>FETCHER</span></div>
+  </a>
+  <div style="display:flex;gap:2rem">
+    <a href="#panels" class="flink">Panels</a>
+    <a href="#numbers" class="flink">Numbers</a>
+    <span style="font-size:.72rem;color:var(--muted);font-family:var(--fm)">© 2025 SigmaFetcher V10</span>
+  </div>
+</footer>
+
+<!-- AUTH MODAL -->
+<div class="overlay" id="authOv" onclick="ovClick(event,'authOv')">
+  <div class="modal">
+    <button class="mcls" onclick="closeOv('authOv')">✕</button>
+    <div class="mtitle" id="authTitle">WELCOME BACK</div>
+    <div class="msub" id="authSub">// sign in to your account</div>
+    <div class="aerr" id="aerr"></div>
+    <div class="atabs">
+      <button class="atab active" id="tL" onclick="switchAuth('login')">Log in</button>
+      <button class="atab" id="tS" onclick="switchAuth('signup')">Sign up</button>
+    </div>
+    <!-- Login -->
+    <div id="fL">
+      <div class="fg"><label>Email</label><input type="email" id="lE" placeholder="you@example.com" autocomplete="email"></div>
+      <div class="fg"><label>Password</label><input type="password" id="lP" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <button class="btn btn-prime btn-full" style="margin-top:1.5rem" onclick="doLogin()" id="loginBtn">Log in →</button>
+    </div>
+    <!-- Signup -->
+    <div id="fS" style="display:none">
+      <div class="fg"><label>Username</label><input type="text" id="sU" placeholder="sigma_user" autocomplete="username"></div>
+      <div class="fg"><label>Email</label><input type="email" id="sE" placeholder="you@example.com" autocomplete="email"></div>
+      <div class="fg"><label>Password</label><input type="password" id="sP" placeholder="Min 6 characters" autocomplete="new-password" onkeydown="if(event.key==='Enter')doSignup()"></div>
+      <button class="btn btn-prime btn-full" style="margin-top:1.5rem" onclick="doSignup()" id="signupBtn">Create account →</button>
+    </div>
+  </div>
+</div>
+
+<!-- SMS MODAL -->
+<div class="overlay" id="smsOv" onclick="ovClick(event,'smsOv')">
+  <div class="modal sms-modal">
+    <button class="mcls" onclick="closeSMS()">✕</button>
+    <div class="mtitle">INCOMING SMS</div>
+    <div class="msub" id="smsSub">// waiting for messages</div>
+    <div class="num-display">
+      <span class="flag" id="smsFlag">🌐</span>
+      <span id="smsNum">—</span>
+      <button class="cpybtn" onclick="copyNum()">COPY</button>
+    </div>
+    <div class="poll-bar"><div class="poll-fill" id="pFill"></div></div>
+    <div class="inbox" id="inbox">
+      <div class="inbox-empty"><span class="spinner"></span>Connecting to panel…</div>
+    </div>
+    <div class="sms-actions">
+      <button class="btn btn-glass btn-sm" onclick="pollSMS()">↻ Refresh</button>
+      <button class="btn btn-sm" id="relBtn"
+        style="background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.25);color:var(--cr)"
+        onclick="releaseNum()">Release number</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── PARTICLES ──────────────────────────────────────────────────────────
+(function(){
+  const c=document.getElementById('cv'),ctx=c.getContext('2d');
+  c.style.cssText='position:fixed;inset:0;z-index:0;pointer-events:none';
+  let W,H,pts=[];
+  const resize=()=>{W=c.width=innerWidth;H=c.height=innerHeight};
+  resize();addEventListener('resize',resize);
+  for(let i=0;i<65;i++) pts.push({x:Math.random()*W,y:Math.random()*H,
+    vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)*.3,r:Math.random()*1.4+.3,a:Math.random()*.6+.2});
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    pts.forEach(p=>{
+      p.x+=p.vx;p.y+=p.vy;
+      if(p.x<0||p.x>W)p.vx*=-1;if(p.y<0||p.y>H)p.vy*=-1;
+      ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(79,140,255,${p.a*.45})`;ctx.fill();
+    });
+    for(let i=0;i<pts.length;i++) for(let j=i+1;j<pts.length;j++){
+      const d=Math.hypot(pts[i].x-pts[j].x,pts[i].y-pts[j].y);
+      if(d<110){ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[j].x,pts[j].y);
+        ctx.strokeStyle=`rgba(79,140,255,${.07*(1-d/110)})`;ctx.lineWidth=.5;ctx.stroke();}
+    }
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// ── NAV SCROLL ──────────────────────────────────────────────────────────
+addEventListener('scroll',()=>document.getElementById('nav').classList.toggle('scrolled',scrollY>40));
+
+// ── SCROLL REVEAL ───────────────────────────────────────────────────────
+new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('vis')}),{threshold:.12})
+  .observe(...document.querySelectorAll('.rev'));
+// Multiple observe
+document.querySelectorAll('.rev').forEach(el=>
+  new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('vis')}),{threshold:.1}).observe(el));
+
+// ── FILTERS ─────────────────────────────────────────────────────────────
+(function(){
+  const seen=new Set();
+  document.querySelectorAll('.nc').forEach(c=>{
+    const cc=c.dataset.cc;
+    if(cc&&!seen.has(cc)){
+      seen.add(cc);
+      const b=document.createElement('button');b.className='fbt';
+      b.textContent=`${c.querySelector('.nflag').textContent} ${cc}`;
+      b.onclick=(e)=>filterBy(cc,e);
+      document.getElementById('fwrap').appendChild(b);
+    }
+  });
+})();
+
+function filterBy(cc,e){
+  document.querySelectorAll('.fbt').forEach(b=>b.classList.remove('active'));
+  (e?e.target:document.querySelector('.fbt')).classList.add('active');
+  document.querySelectorAll('.nc').forEach(c=>{
+    c.style.display=(!cc||c.dataset.cc===cc)?'':'none';
+  });
+}
+
+// ── AUTH ─────────────────────────────────────────────────────────────────
+function openAuth(tab){
+  document.getElementById('authOv').classList.add('open');
+  switchAuth(tab);
+}
+function closeOv(id){document.getElementById(id).classList.remove('open')}
+function ovClick(e,id){if(e.target.id===id)closeOv(id)}
+function switchAuth(tab){
+  const isL=tab==='login';
+  document.getElementById('tL').classList.toggle('active',isL);
+  document.getElementById('tS').classList.toggle('active',!isL);
+  document.getElementById('fL').style.display=isL?'':'none';
+  document.getElementById('fS').style.display=isL?'none':'';
+  document.getElementById('authTitle').textContent=isL?'WELCOME BACK':'CREATE ACCOUNT';
+  document.getElementById('authSub').textContent=isL?'// sign in to your account':'// join sigmaFetcher today';
+  const e=document.getElementById('aerr');e.textContent='';e.className='aerr';
+}
+function showErr(msg){const e=document.getElementById('aerr');e.textContent=msg;e.className='aerr show'}
+
+async function doLogin(){
+  const btn=document.getElementById('loginBtn');
+  btn.disabled=true;btn.textContent='Checking…';
+  try{
+    const r=await fetch('/login',{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      credentials:'same-origin',
+      body:JSON.stringify({email:document.getElementById('lE').value.trim(),
+        password:document.getElementById('lP').value})});
+    const d=await r.json();
+    if(d.ok){window.location.href=d.is_admin?'/admin':'/';}
+    else{showErr(d.error||'Login failed');btn.disabled=false;btn.textContent='Log in →';}
+  }catch(err){showErr('Network error — try again');btn.disabled=false;btn.textContent='Log in →';}
+}
+
+async function doSignup(){
+  const btn=document.getElementById('signupBtn');
+  btn.disabled=true;btn.textContent='Creating…';
+  try{
+    const r=await fetch('/signup',{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      credentials:'same-origin',
+      body:JSON.stringify({username:document.getElementById('sU').value.trim(),
+        email:document.getElementById('sE').value.trim(),
+        password:document.getElementById('sP').value})});
+    const d=await r.json();
+    if(d.ok){window.location.reload();}
+    else{showErr(d.error||'Signup failed');btn.disabled=false;btn.textContent='Create account →';}
+  }catch(err){showErr('Network error — try again');btn.disabled=false;btn.textContent='Create account →';}
+}
+
+// ── SMS ──────────────────────────────────────────────────────────────────
+let aNID=null,aOID=null,aNum='',pollT=null;
+
+async function getNumber(nid,btn,num,flag){
+  btn.disabled=true;btn.textContent='…';
+  try{
+    const r=await fetch(`/api/get_number/${nid}`,{method:'POST',credentials:'same-origin'});
+    const d=await r.json();
+    if(d.ok){
+      aNID=nid;aOID=d.order.id;aNum=num;
+      document.getElementById('smsFlag').textContent=flag;
+      document.getElementById('smsNum').textContent=num;
+      document.getElementById('smsSub').textContent='// waiting for messages';
+      document.getElementById('inbox').innerHTML='<div class="inbox-empty"><span class="spinner"></span>Connecting to panel…</div>';
+      document.getElementById('smsOv').classList.add('open');
+      pollSMS();startBar();
+      pollT=setInterval(()=>{pollSMS();startBar();},5000);
+      btn.textContent='✓';btn.style.opacity='.5';
+    }else{
+      btn.disabled=false;btn.textContent='Get';
+      alert(d.error||'Could not get number');
+    }
+  }catch(err){btn.disabled=false;btn.textContent='Get';alert('Network error');}
+}
+
+function startBar(){
+  const f=document.getElementById('pFill');
+  f.style.transition='none';f.style.width='0';
+  setTimeout(()=>{f.style.transition='width 5s linear';f.style.width='100%';},30);
+}
+
+async function pollSMS(){
+  if(!aNID)return;
+  try{
+    const r=await fetch(`/api/sms/${aNID}`,{credentials:'same-origin'});
+    const d=await r.json();
+    if(!d.ok)return;
+    const box=document.getElementById('inbox');
+    if(!d.messages.length){
+      box.innerHTML='<div class="inbox-empty"><span class="spinner"></span>Waiting for SMS — checking every 5s…</div>';
+      return;
+    }
+    box.innerHTML=d.messages.map(m=>{
+      const otp=m.message.match(/\b\d{4,8}\b/)?.[0];
+      return `<div class="sms-item">
+        <div class="sms-from">FROM: ${m.sender||'UNKNOWN'}</div>
+        <div class="sms-text">${m.message}</div>
+        ${otp?`<div class="sms-otp">${otp}</div>`:''}
+        <div class="sms-ts">${new Date(m.received_at).toLocaleString()}</div>
+      </div>`;
+    }).join('');
+  }catch(e){}
+}
+
+async function releaseNum(){
+  if(!aOID)return;
+  try{await fetch(`/api/release/${aOID}`,{method:'POST',credentials:'same-origin'});}catch(e){}
+  clearInterval(pollT);closeSMS();window.location.reload();
+}
+
+function closeSMS(){clearInterval(pollT);aNID=aOID=null;closeOv('smsOv');}
+
+function copyNum(){
+  navigator.clipboard?.writeText(aNum).catch(()=>{});
+  const b=document.querySelector('.cpybtn');
+  b.textContent='COPIED!';setTimeout(()=>b.textContent='COPY',2000);
+}
+
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){closeOv('authOv');closeSMS();}
+});
+
+// ── ANIMATED COUNTERS ────────────────────────────────────────────────────
+function animCount(el,target,suf){
+  const step=Math.max(1,Math.ceil(target/50));let n=0;
+  const t=setInterval(()=>{
+    n=Math.min(n+step,target);
+    el.innerHTML=n+(n>=target?`<span class="u">${suf}</span>`:'');
+    if(n>=target)clearInterval(t);
+  },25);
+}
+setTimeout(()=>{
+  const pe=document.getElementById('sp'),ne=document.getElementById('sn');
+  if(pe)animCount(pe,parseInt(pe.textContent)||0,'');
+  if(ne)animCount(ne,parseInt(ne.textContent)||0,'+');
+},700);
+</script>
+</body>
+</html>

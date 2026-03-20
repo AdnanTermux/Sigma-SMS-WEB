@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Admin — SigmaFetcher V10</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#03050f;--s1:#080d1e;--s2:#0d1530;
+  --b1:rgba(79,140,255,.09);--b2:rgba(79,140,255,.18);--b3:rgba(79,140,255,.35);
+  --c1:#4f8cff;--c2:#00d4ff;--c3:#a855f7;--c4:#10b981;--c5:#f59e0b;--cr:#ef4444;
+  --txt:#e2eaff;--muted:#5a6a94;--muted2:#8899bb;
+  --fh:'Orbitron',sans-serif;--fb:'Space Grotesk',sans-serif;--fm:'JetBrains Mono',monospace;
+  --grad:linear-gradient(135deg,var(--c1),var(--c2));
+  --grad2:linear-gradient(135deg,var(--c1),var(--c3));
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--txt);font-family:var(--fb);display:flex;overflow:hidden}
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(ellipse 50% 70% at 5% 50%,rgba(79,140,255,.05),transparent 60%),
+    radial-gradient(ellipse 40% 50% at 95% 20%,rgba(168,85,247,.04),transparent 60%)}
+body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.022) 3px,rgba(0,0,0,.022) 4px)}
+
+/* Sidebar */
+.sb{width:240px;flex-shrink:0;background:rgba(8,13,30,.96);border-right:1px solid var(--b1);
+  display:flex;flex-direction:column;height:100vh;overflow-y:auto;position:relative;z-index:10}
+.sb-logo{display:flex;align-items:center;gap:10px;padding:1.75rem 1.5rem;border-bottom:1px solid var(--b1);
+  text-decoration:none;font-family:var(--fh);font-weight:700;font-size:.92rem;letter-spacing:.06em;color:var(--txt)}
+.sb-mark{width:32px;height:32px;border-radius:9px;background:var(--grad);flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 0 16px rgba(79,140,255,.35)}
+.sb-logo span{color:var(--c2)}
+.sb-sec{font-family:var(--fm);font-size:.58rem;letter-spacing:.2em;color:var(--muted);
+  padding:.85rem 1.5rem .3rem;text-transform:uppercase}
+.sb-btn{display:flex;align-items:center;gap:10px;padding:.65rem 1.5rem;
+  color:var(--muted2);font-size:.8rem;font-weight:500;transition:all .2s;
+  border-left:2px solid transparent;cursor:pointer;background:none;
+  border-right:none;border-top:none;border-bottom:none;
+  font-family:var(--fb);width:100%;text-align:left;text-decoration:none}
+.sb-btn:hover{color:var(--txt);background:rgba(79,140,255,.05);border-left-color:rgba(79,140,255,.3)}
+.sb-btn.active{color:var(--c1);background:rgba(79,140,255,.08);border-left-color:var(--c1)}
+.sb-ico{font-size:14px;width:18px;text-align:center}
+.sb-badge{margin-left:auto;font-size:.58rem;font-family:var(--fm);
+  background:rgba(79,140,255,.12);border:1px solid rgba(79,140,255,.2);
+  color:var(--c1);padding:2px 8px;border-radius:100px}
+.sb-foot{margin-top:auto;padding:1.5rem;border-top:1px solid var(--b1)}
+.sb-info{font-size:.7rem;color:var(--muted);margin-bottom:1rem;font-family:var(--fm);line-height:1.6}
+.sb-info strong{display:block;color:var(--muted2);margin-bottom:2px}
+
+/* Main */
+main{flex:1;overflow-y:auto;position:relative;z-index:1;display:flex;flex-direction:column}
+.topbar{position:sticky;top:0;z-index:50;background:rgba(3,5,15,.88);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--b1);padding:1rem 2.5rem;
+  display:flex;align-items:center;justify-content:space-between}
+.topbar-t{font-family:var(--fh);font-weight:700;font-size:1rem;letter-spacing:.06em}
+.live-pill{display:flex;align-items:center;gap:6px;font-size:.65rem;font-family:var(--fm);color:var(--c4);
+  background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);border-radius:100px;padding:4px 12px}
+.live-dot{width:5px;height:5px;border-radius:50%;background:var(--c4);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,.5)}50%{box-shadow:0 0 0 5px rgba(16,185,129,0)}}
+.content{padding:2rem 2.5rem;flex:1}
+
+/* Stat cards */
+.sg{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:2rem}
+.sc{flex:1 1 130px;background:linear-gradient(145deg,rgba(13,21,48,.9),rgba(8,13,30,.8));
+  border:1px solid var(--b1);border-radius:14px;padding:1.35rem;
+  position:relative;overflow:hidden;transition:all .3s}
+.sc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;opacity:1}
+.sc.blue::before{background:linear-gradient(90deg,var(--c1),var(--c2))}
+.sc.purple::before{background:linear-gradient(90deg,var(--c3),var(--c1))}
+.sc.green::before{background:linear-gradient(90deg,var(--c4),var(--c2))}
+.sc.amber::before{background:linear-gradient(90deg,var(--c5),var(--c3))}
+.sc.cyan::before{background:linear-gradient(90deg,var(--c2),var(--c1))}
+.sc.red::before{background:linear-gradient(90deg,var(--cr),var(--c3))}
+.sc:hover{border-color:var(--b2);transform:translateY(-2px)}
+.sc-l{font-size:.6rem;font-family:var(--fm);color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:.5rem}
+.sc-v{font-family:var(--fh);font-weight:700;font-size:2.1rem;letter-spacing:-.02em}
+.sc-v.blue{color:var(--c1)}.sc-v.purple{color:var(--c3)}.sc-v.green{color:var(--c4)}
+.sc-v.amber{color:var(--c5)}.sc-v.cyan{color:var(--c2)}.sc-v.red{color:var(--cr)}
+
+/* Card */
+.card{background:linear-gradient(145deg,rgba(13,21,48,.85),rgba(8,13,30,.8));
+  border:1px solid var(--b1);border-radius:16px;margin-bottom:1.5rem;overflow:hidden}
+.ch{padding:1.1rem 1.5rem;border-bottom:1px solid var(--b1);
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;
+  background:rgba(79,140,255,.02)}
+.ct{font-family:var(--fh);font-weight:600;font-size:.82rem;letter-spacing:.06em}
+.cb{padding:1.5rem}
+
+/* Form */
+.fr{display:flex;flex-wrap:wrap;gap:12px}
+.fg{flex:1 1 150px}
+.fg label{display:block;font-size:.6rem;font-family:var(--fm);letter-spacing:.1em;
+  color:var(--muted);text-transform:uppercase;margin-bottom:5px}
+.fg input,.fg select{width:100%;padding:9px 12px;background:rgba(79,140,255,.04);
+  border:1px solid var(--b1);border-radius:9px;color:var(--txt);
+  font-family:var(--fm);font-size:.8rem;outline:none;transition:all .2s}
+.fg input:focus,.fg select:focus{border-color:var(--b3);background:rgba(79,140,255,.07);box-shadow:0 0 0 3px rgba(79,140,255,.1)}
+.fg input::placeholder{color:var(--muted)}
+.fg select option{background:var(--s2);color:var(--txt)}
+.fg input[type="file"]{cursor:pointer;font-size:.75rem}
+
+/* Table */
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.77rem}
+thead th{font-size:.58rem;font-family:var(--fm);letter-spacing:.12em;text-transform:uppercase;
+  color:var(--muted);padding:.7rem 1rem;text-align:left;border-bottom:1px solid var(--b1);
+  white-space:nowrap;background:rgba(79,140,255,.02)}
+tbody td{padding:.75rem 1rem;border-bottom:1px solid rgba(79,140,255,.04);vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:rgba(79,140,255,.03)}
+
+/* Badges */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:100px;
+  font-size:.62rem;font-family:var(--fm);font-weight:500;white-space:nowrap}
+.bg-green{background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.2);color:var(--c4)}
+.bg-red{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);color:var(--cr)}
+.bg-blue{background:rgba(79,140,255,.1);border:1px solid rgba(79,140,255,.2);color:var(--c1)}
+.bg-amber{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.2);color:var(--c5)}
+.bg-gray{background:rgba(90,106,148,.1);border:1px solid rgba(90,106,148,.2);color:var(--muted2)}
+.bg-cyan{background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.18);color:var(--c2)}
+.bdot{width:4px;height:4px;border-radius:50%;display:inline-block}
+.bdot-g{background:var(--c4);animation:pulse 2s infinite}
+.bdot-r{background:var(--cr)}
+.bdot-x{background:var(--muted)}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border-radius:9px;border:none;
+  font-family:var(--fb);font-size:.77rem;font-weight:600;cursor:pointer;transition:all .22s;
+  text-decoration:none;white-space:nowrap}
+.btn-prime{background:var(--grad2);color:#fff;box-shadow:0 0 16px rgba(79,140,255,.25)}
+.btn-prime:hover{opacity:.9;transform:translateY(-1px)}
+.btn-glass{background:rgba(255,255,255,.04);border:1px solid var(--b2);color:var(--muted2)}
+.btn-glass:hover{border-color:var(--b3);color:var(--c1);background:rgba(79,140,255,.08)}
+.btn-danger{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);color:var(--cr)}
+.btn-danger:hover{background:rgba(239,68,68,.2)}
+.btn-success{background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.2);color:var(--c4)}
+.btn-success:hover{background:rgba(16,185,129,.2)}
+.btn-sm{padding:6px 14px;font-size:.72rem;border-radius:8px}
+.btn-xs{padding:4px 10px;font-size:.65rem;border-radius:7px}
+
+/* Flash */
+.flash{padding:10px 16px;border-radius:10px;font-size:.77rem;font-family:var(--fm);
+  display:flex;align-items:center;gap:8px;margin-bottom:8px;
+  animation:fadeUp .4s both}
+.flash-success{background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);color:var(--c4)}
+.flash-error{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);color:var(--cr)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* Tab nav */
+.tnav{display:flex;border-bottom:1px solid var(--b1);margin-bottom:2rem}
+.tn{padding:.8rem 1.4rem;background:transparent;border:none;color:var(--muted);
+  font-family:var(--fm);font-size:.72rem;letter-spacing:.06em;cursor:pointer;
+  transition:all .2s;border-bottom:2px solid transparent;margin-bottom:-1px}
+.tn.active{color:var(--c1);border-bottom-color:var(--c1)}
+.tn:hover{color:var(--txt)}
+.tp{display:none}
+.tp.active{display:block}
+
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:rgba(79,140,255,.15);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:rgba(79,140,255,.3)}
+
+@media(max-width:900px){.sb{display:none}.topbar,.content{padding-left:1.5rem;padding-right:1.5rem}}
+</style>
+</head>
+<body>
+
+<aside class="sb">
+  <a href="/" class="sb-logo">
+    <div class="sb-mark">⚡</div>SIGMA<span>FETCHER</span>
+  </a>
+  <div class="sb-sec">Overview</div>
+  <button class="sb-btn active" onclick="showTab('dashboard')"><span class="sb-ico">📊</span>Dashboard</button>
+  <a href="/" target="_blank" class="sb-btn"><span class="sb-ico">🌐</span>View Site</a>
+  <div class="sb-sec">Manage</div>
+  <button class="sb-btn" onclick="showTab('panels')"><span class="sb-ico">🔌</span>Panels<span class="sb-badge">{{ stats.panels }}</span></button>
+  <button class="sb-btn" onclick="showTab('numbers')"><span class="sb-ico">📱</span>Numbers<span class="sb-badge">{{ stats.numbers }}</span></button>
+  <button class="sb-btn" onclick="showTab('users')"><span class="sb-ico">👥</span>Users<span class="sb-badge">{{ stats.users }}</span></button>
+  <button class="sb-btn" onclick="showTab('orders')"><span class="sb-ico">📋</span>Orders<span class="sb-badge">{{ stats.orders }}</span></button>
+  <div class="sb-foot">
+    <div class="sb-info"><strong>ADMIN</strong>adnannoordogar01@gmail.com</div>
+    <a href="/logout" class="btn btn-glass btn-sm" style="width:100%;justify-content:center">Log out</a>
+  </div>
+</aside>
+
+<main>
+  <div class="topbar">
+    <div class="topbar-t" id="topT">DASHBOARD</div>
+    <div style="display:flex;gap:12px;align-items:center">
+      <div class="live-pill"><div class="live-dot"></div>LIVE</div>
+      <span style="font-size:.68rem;color:var(--muted);font-family:var(--fm)">V10</span>
+    </div>
+  </div>
+
+  <div class="content">
+    <!-- Flash messages -->
+    {% with msgs = get_flashed_messages(with_categories=true) %}
+    {% if msgs %}
+    <div style="margin-bottom:1.5rem">
+      {% for cat, msg in msgs %}
+      <div class="flash flash-{{ cat }}">{{ '✓' if cat == 'success' else '⚠' }} {{ msg }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <!-- DASHBOARD -->
+    <div class="tp active" id="tp-dashboard">
+      <div class="sg">
+        <div class="sc blue"><div class="sc-l">Total Panels</div><div class="sc-v blue">{{ stats.panels }}</div></div>
+        <div class="sc green"><div class="sc-l">Online</div><div class="sc-v green">{{ stats.online }}</div></div>
+        <div class="sc cyan"><div class="sc-l">Total Numbers</div><div class="sc-v cyan">{{ stats.numbers }}</div></div>
+        <div class="sc purple"><div class="sc-l">Available</div><div class="sc-v purple">{{ stats.available }}</div></div>
+        <div class="sc amber"><div class="sc-l">Users</div><div class="sc-v amber">{{ stats.users }}</div></div>
+        <div class="sc red"><div class="sc-l">SMS Received</div><div class="sc-v red">{{ stats.messages }}</div></div>
+      </div>
+      <div style="display:flex;gap:14px;flex-wrap:wrap">
+        <div class="card" style="flex:1 1 280px">
+          <div class="ch"><div class="ct">QUICK ACTIONS</div></div>
+          <div class="cb" style="display:flex;flex-direction:column;gap:10px">
+            <button class="btn btn-prime" onclick="showTab('panels')">🔌 Manage Panels</button>
+            <button class="btn btn-glass" onclick="showTab('numbers')">📱 Upload Numbers</button>
+            <button class="btn btn-glass" onclick="showTab('users')">👥 View Users</button>
+            <a href="/" target="_blank" class="btn btn-success">🌐 View Public Site</a>
+          </div>
+        </div>
+        <div class="card" style="flex:1 1 280px">
+          <div class="ch"><div class="ct">PANEL STATUS</div></div>
+          <div class="cb">
+            {% for p in panels[:8] %}
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;border-bottom:1px solid var(--b1)">
+              <span style="font-family:var(--fm);font-size:.78rem">{{ p.name }}</span>
+              <span class="badge bg-{{ 'green' if p.status=='online' else 'red' if p.status=='offline' else 'gray' }}">
+                <span class="bdot bdot-{{ 'g' if p.status=='online' else 'r' if p.status=='offline' else 'x' }}"></span>
+                {{ p.status }}
+              </span>
+            </div>
+            {% else %}
+            <p style="color:var(--muted);font-size:.82rem">No panels yet.</p>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANELS -->
+    <div class="tp" id="tp-panels">
+      <div class="card" style="margin-bottom:1.5rem">
+        <div class="ch"><div class="ct">ADD NEW PANEL</div></div>
+        <div class="cb">
+          <form action="/admin/panels/add" method="POST">
+            <div class="fr">
+              <div class="fg"><label>Name</label><input name="name" placeholder="Hadi" required></div>
+              <div class="fg" style="flex:2"><label>Base URL</label><input name="base_url" placeholder="http://185.2.83.39/ints" required></div>
+              <div class="fg"><label>Username</label><input name="username" required></div>
+              <div class="fg"><label>Password</label><input name="password" type="password" required></div>
+              <div class="fg"><label>Type</label>
+                <select name="panel_type">
+                  <option value="ints">ints</option>
+                  <option value="timesms">timesms</option>
+                </select>
+              </div>
+            </div>
+            <div style="margin-top:1.25rem"><button type="submit" class="btn btn-prime">Add Panel →</button></div>
+          </form>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ch"><div class="ct">ALL PANELS</div><span style="font-size:.68rem;font-family:var(--fm);color:var(--muted)">{{ stats.panels }} total</span></div>
+        <div class="tw">
+          <table>
+            <thead><tr><th>Name</th><th>URL</th><th>User</th><th>Type</th><th>Status</th><th>Numbers</th><th>Checked</th><th>Actions</th></tr></thead>
+            <tbody>
+            {% for p in panels %}
+            <tr id="pr-{{ p.id }}">
+              <td><strong style="font-family:var(--fm)">{{ p.name }}</strong></td>
+              <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted);font-family:var(--fm);font-size:.7rem">{{ p.base_url }}</td>
+              <td style="color:var(--muted);font-family:var(--fm);font-size:.7rem">{{ p.username }}</td>
+              <td><span class="badge bg-blue">{{ p.panel_type }}</span></td>
+              <td>
+                <span class="badge bg-{{ 'green' if p.status=='online' else 'red' if p.status=='offline' else 'gray' }}" id="pst-{{ p.id }}">
+                  <span class="bdot bdot-{{ 'g' if p.status=='online' else 'r' if p.status=='offline' else 'x' }}"></span>
+                  {{ p.status }}
+                </span>
+              </td>
+              <td style="font-family:var(--fm)">
+                <span style="color:var(--c2)">{{ p.numbers.filter_by(is_available=True).count() }}</span> / {{ p.numbers.count() }}
+              </td>
+              <td style="font-family:var(--fm);font-size:.68rem;color:var(--muted)">{{ p.last_checked.strftime('%m/%d %H:%M') if p.last_checked else '—' }}</td>
+              <td>
+                <div style="display:flex;gap:5px;flex-wrap:wrap">
+                  <button class="btn btn-success btn-xs" onclick="pingPanel({{ p.id }})">Ping</button>
+                  <button class="btn btn-glass btn-xs" onclick="fetchPanel({{ p.id }},this)">Fetch</button>
+                  <button class="btn btn-glass btn-xs" onclick="togglePanel({{ p.id }},this)">{{ 'Disable' if p.active else 'Enable' }}</button>
+                  <button class="btn btn-danger btn-xs" onclick="delPanel({{ p.id }})">Del</button>
+                </div>
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="8" style="text-align:center;color:var(--muted);padding:2.5rem;font-family:var(--fm)">No panels yet. Add one above.</td></tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- NUMBERS -->
+    <div class="tp" id="tp-numbers">
+      <div class="card" style="margin-bottom:1.5rem">
+        <div class="ch"><div class="ct">UPLOAD NUMBERS — CSV</div></div>
+        <div class="cb">
+          <div style="background:rgba(79,140,255,.05);border:1px solid var(--b1);border-radius:8px;padding:.9rem;margin-bottom:1.25rem;font-family:var(--fm);font-size:.75rem;color:var(--muted2);line-height:1.8">
+            Format: <span style="color:var(--c2)">+923001234567,1</span>  — number,panelID — one per line.<br>
+            Panel ID column is optional if you pick a default panel below.
+          </div>
+          <form action="/admin/numbers/upload" method="POST" enctype="multipart/form-data">
+            <div class="fr">
+              <div class="fg" style="flex:2"><label>CSV / TXT File</label><input type="file" name="file" accept=".csv,.txt" required></div>
+              <div class="fg">
+                <label>Default Panel (optional)</label>
+                <select name="panel_id">
+                  <option value="">— use CSV column 2 —</option>
+                  {% for p in panels %}<option value="{{ p.id }}">{{ p.name }} #{{ p.id }}</option>{% endfor %}
+                </select>
+              </div>
+            </div>
+            <div style="margin-top:1.25rem"><button type="submit" class="btn btn-prime">Upload →</button></div>
+          </form>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ch">
+          <div class="ct">NUMBERS (LATEST 60)</div>
+          <span style="font-size:.68rem;font-family:var(--fm);color:var(--muted)">{{ stats.available }} available / {{ stats.numbers }} total</span>
+        </div>
+        <div class="tw">
+          <table>
+            <thead><tr><th>Flag</th><th>Number</th><th>Country</th><th>Panel</th><th>Status</th><th>SMS</th><th>Actions</th></tr></thead>
+            <tbody>
+            {% for n in numbers %}
+            <tr id="nr-{{ n.id }}">
+              <td style="font-size:1.25rem">{{ n.country_flag or '🌐' }}</td>
+              <td style="font-family:var(--fm)"><strong>{{ n.number }}</strong></td>
+              <td style="color:var(--muted2)">{{ n.country_name or 'Unknown' }}</td>
+              <td><span class="badge bg-blue">{{ n._panel_name }}</span></td>
+              <td>
+                <span class="badge bg-{{ 'green' if n.is_available else 'amber' }}" id="nst-{{ n.id }}">
+                  {{ 'available' if n.is_available else 'in use' }}
+                </span>
+              </td>
+              <td style="font-family:var(--fm);color:var(--c2)">{{ n.messages.count() }}</td>
+              <td>
+                <div style="display:flex;gap:5px">
+                  <button class="btn btn-glass btn-xs" onclick="toggleNum({{ n.id }},this)">{{ 'Disable' if n.is_available else 'Enable' }}</button>
+                  <button class="btn btn-danger btn-xs" onclick="delNum({{ n.id }})">Del</button>
+                </div>
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="7" style="text-align:center;color:var(--muted);padding:2.5rem;font-family:var(--fm)">No numbers yet. Upload a CSV or fetch from a panel.</td></tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- USERS -->
+    <div class="tp" id="tp-users">
+      <div class="card">
+        <div class="ch"><div class="ct">USERS</div><span style="font-size:.68rem;font-family:var(--fm);color:var(--muted)">{{ stats.users }} total</span></div>
+        <div class="tw">
+          <table>
+            <thead><tr><th>#</th><th>Username</th><th>Email</th><th>Role</th><th>Joined</th><th>Orders</th><th>Actions</th></tr></thead>
+            <tbody>
+            {% for u in users %}
+            <tr id="ur-{{ u.id }}">
+              <td style="font-family:var(--fm);color:var(--muted)">#{{ u.id }}</td>
+              <td><strong>{{ u.username }}</strong></td>
+              <td style="color:var(--muted2);font-family:var(--fm);font-size:.73rem">{{ u.email }}</td>
+              <td><span class="badge bg-{{ 'blue' if u.is_admin else 'gray' }}" id="urol-{{ u.id }}">{{ 'admin' if u.is_admin else 'user' }}</span></td>
+              <td style="font-family:var(--fm);font-size:.7rem;color:var(--muted)">{{ u.created_at.strftime('%Y-%m-%d') }}</td>
+              <td style="font-family:var(--fm);color:var(--c1)">{{ u.orders.count() }}</td>
+              <td>
+                <div style="display:flex;gap:5px">
+                  <button class="btn btn-glass btn-xs" onclick="toggleAdmin({{ u.id }},this)">{{ 'Remove admin' if u.is_admin else 'Make admin' }}</button>
+                  <button class="btn btn-danger btn-xs" onclick="delUser({{ u.id }})">Delete</button>
+                </div>
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="7" style="text-align:center;color:var(--muted);padding:2.5rem;font-family:var(--fm)">No users yet.</td></tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ORDERS -->
+    <div class="tp" id="tp-orders">
+      <div class="card">
+        <div class="ch"><div class="ct">RECENT ORDERS</div><span style="font-size:.68rem;font-family:var(--fm);color:var(--muted)">{{ stats.orders }} total</span></div>
+        <div class="tw">
+          <table>
+            <thead><tr><th>#</th><th>User</th><th>Number</th><th>Country</th><th>Panel</th><th>Status</th><th>Created</th></tr></thead>
+            <tbody>
+            {% for o in orders %}
+            <tr>
+              <td style="font-family:var(--fm);color:var(--muted)">#{{ o.id }}</td>
+              <td style="font-family:var(--fm)">{{ o._username }}</td>
+              <td style="font-family:var(--fm)">{{ o._number }}</td>
+              <td>{{ o._country }}</td>
+              <td><span class="badge bg-blue">{{ o._panel }}</span></td>
+              <td><span class="badge bg-{{ 'green' if o.status=='active' else 'gray' }}">{{ o.status }}</span></td>
+              <td style="font-family:var(--fm);font-size:.68rem;color:var(--muted)">{{ o.created_at.strftime('%m/%d %H:%M') }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="7" style="text-align:center;color:var(--muted);padding:2.5rem;font-family:var(--fm)">No orders yet.</td></tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+const TABS=['dashboard','panels','numbers','users','orders'];
+const TITLES={dashboard:'DASHBOARD',panels:'PANELS',numbers:'NUMBERS',users:'USERS',orders:'ORDERS'};
+
+function showTab(name){
+  TABS.forEach(t=>{
+    document.getElementById('tp-'+t)?.classList.toggle('active',t===name);
+  });
+  document.querySelectorAll('.sb-btn').forEach(b=>{
+    b.classList.toggle('active',b.textContent.trim().toLowerCase().includes(name));
+  });
+  document.getElementById('topT').textContent=TITLES[name]||name.toUpperCase();
+  history.replaceState(null,'','#'+name);
+}
+
+async function pingPanel(id){
+  const el=document.getElementById('pst-'+id);
+  el.innerHTML='<span class="bdot bdot-x"></span> pinging…';
+  const d=await(await fetch(`/admin/panels/${id}/ping`,{method:'POST',credentials:'same-origin'})).json();
+  const g=d.status==='online';
+  el.className=`badge bg-${g?'green':'red'}`;
+  el.innerHTML=`<span class="bdot bdot-${g?'g':'r'}"></span>${d.status}`;
+}
+async function fetchPanel(id,btn){
+  btn.textContent='…';btn.disabled=true;
+  const d=await(await fetch(`/admin/panels/${id}/fetch`,{method:'POST',credentials:'same-origin'})).json();
+  btn.textContent='Fetch';btn.disabled=false;
+  alert(d.ok?`✓ Added ${d.added} numbers (${d.total} fetched total)`:`Error: ${d.error||'failed'}`);
+  if(d.ok&&d.added>0)setTimeout(()=>location.reload(),400);
+}
+async function togglePanel(id,btn){
+  const d=await(await fetch(`/admin/panels/${id}/toggle`,{method:'POST',credentials:'same-origin'})).json();
+  btn.textContent=d.active?'Disable':'Enable';
+}
+async function delPanel(id){
+  if(!confirm('Delete this panel and ALL its numbers?'))return;
+  await fetch(`/admin/panels/${id}/delete`,{method:'POST',credentials:'same-origin'});
+  document.getElementById('pr-'+id)?.remove();
+}
+async function toggleNum(id,btn){
+  const d=await(await fetch(`/admin/numbers/${id}/toggle`,{method:'POST',credentials:'same-origin'})).json();
+  btn.textContent=d.available?'Disable':'Enable';
+  const el=document.getElementById('nst-'+id);
+  el.className=`badge bg-${d.available?'green':'amber'}`;
+  el.textContent=d.available?'available':'in use';
+}
+async function delNum(id){
+  if(!confirm('Delete this number?'))return;
+  await fetch(`/admin/numbers/${id}/delete`,{method:'POST',credentials:'same-origin'});
+  document.getElementById('nr-'+id)?.remove();
+}
+async function toggleAdmin(id,btn){
+  const d=await(await fetch(`/admin/users/${id}/toggle_admin`,{method:'POST',credentials:'same-origin'})).json();
+  btn.textContent=d.is_admin?'Remove admin':'Make admin';
+  const el=document.getElementById('urol-'+id);
+  el.className=`badge bg-${d.is_admin?'blue':'gray'}`;
+  el.textContent=d.is_admin?'admin':'user';
+}
+async function delUser(id){
+  if(!confirm('Delete this user and all their data?'))return;
+  await fetch(`/admin/users/${id}/delete`,{method:'POST',credentials:'same-origin'});
+  document.getElementById('ur-'+id)?.remove();
+}
+
+const h=location.hash.replace('#','');
+if(TABS.includes(h))showTab(h);
+</script>
+</body>
+</html>
