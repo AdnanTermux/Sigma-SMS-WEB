@@ -1,0 +1,1156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
+<title>Admin — SigmaFetcher V10</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Orbitron:wght@700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#03050f;--s1:#080d1e;--s2:#0e1628;
+  --b1:rgba(79,140,255,.09);--b2:rgba(79,140,255,.18);--b3:rgba(79,140,255,.38);
+  --c1:#4f8cff;--c2:#00d4ff;--c3:#a855f7;--c4:#10b981;--cr:#ef4444;--cy:#f59e0b;
+  --txt:#e2eaff;--muted:#5a6a94;--m2:#8899bb;
+  --fh:'Orbitron',sans-serif;--fb:'Space Grotesk',sans-serif;--fm:'JetBrains Mono',monospace;
+  --g1:linear-gradient(135deg,var(--c1),var(--c2));
+  --g2:linear-gradient(135deg,var(--c1),var(--c3));
+  --r:12px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--txt);font-family:var(--fb);display:flex}
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(ellipse 50% 60% at 5% 50%,rgba(79,140,255,.05),transparent 60%),
+    radial-gradient(ellipse 40% 40% at 95% 20%,rgba(168,85,247,.04),transparent 60%)}
+
+/* ── MOBILE TOGGLE ─────────────────────────────────────── */
+.mob-btn{display:none;position:fixed;top:12px;left:12px;z-index:300;
+  width:40px;height:40px;border-radius:10px;background:rgba(8,13,30,.95);
+  border:1px solid var(--b2);color:var(--txt);font-size:18px;
+  align-items:center;justify-content:center;cursor:pointer}
+@media(max-width:900px){.mob-btn{display:flex}}
+
+/* ── SIDEBAR ────────────────────────────────────────────── */
+.sb{width:230px;flex-shrink:0;background:rgba(8,13,30,.97);
+  border-right:1px solid var(--b1);display:flex;flex-direction:column;
+  height:100vh;overflow-y:auto;position:relative;z-index:20;transition:transform .3s}
+.sb::-webkit-scrollbar{width:3px}
+.sb::-webkit-scrollbar-thumb{background:var(--b1);border-radius:2px}
+@media(max-width:900px){
+  .sb{position:fixed;left:0;top:0;transform:translateX(-100%)}
+  .sb.open{transform:translateX(0);box-shadow:4px 0 24px rgba(0,0,0,.6)}
+}
+.sb-logo{display:flex;align-items:center;gap:9px;padding:1.4rem 1.25rem;
+  border-bottom:1px solid var(--b1);text-decoration:none;
+  font-family:var(--fh);font-weight:700;font-size:.88rem;letter-spacing:.06em;color:var(--txt)}
+.sb-lm{width:30px;height:30px;border-radius:8px;background:var(--g2);flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:15px;
+  box-shadow:0 0 14px rgba(79,140,255,.35)}
+.sb-logo span{color:var(--c2)}
+.sb-sec{font-family:var(--fm);font-size:.55rem;letter-spacing:.2em;
+  color:var(--muted);padding:.75rem 1.25rem .25rem;text-transform:uppercase}
+.sbi{display:flex;align-items:center;gap:9px;padding:.58rem 1.25rem;
+  color:var(--m2);font-size:.78rem;font-weight:500;transition:all .2s;
+  border-left:2px solid transparent;cursor:pointer;background:none;
+  border-right:none;border-top:none;border-bottom:none;
+  font-family:var(--fb);width:100%;text-align:left;text-decoration:none}
+.sbi:hover{color:var(--txt);background:rgba(79,140,255,.05);border-left-color:rgba(79,140,255,.3)}
+.sbi.on{color:var(--c1);background:rgba(79,140,255,.08);border-left-color:var(--c1)}
+.sbi-ico{font-size:13px;width:18px;text-align:center;flex-shrink:0}
+.sb-badge{margin-left:auto;font-size:.54rem;font-family:var(--fm);
+  background:rgba(79,140,255,.12);border:1px solid rgba(79,140,255,.2);
+  color:var(--c1);padding:1px 6px;border-radius:100px;flex-shrink:0}
+.sb-foot{margin-top:auto;padding:1.1rem 1.25rem;border-top:1px solid var(--b1)}
+.sb-uinfo{font-size:.67rem;color:var(--muted);margin-bottom:.75rem;font-family:var(--fm);line-height:1.6}
+.sb-uinfo strong{display:block;color:var(--m2);margin-bottom:2px}
+
+/* ── MAIN ───────────────────────────────────────────────── */
+main{flex:1;overflow-y:auto;position:relative;z-index:1;display:flex;flex-direction:column;min-width:0}
+.topbar{position:sticky;top:0;z-index:50;background:rgba(3,5,15,.9);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--b1);padding:.85rem clamp(1rem,3vw,2rem);
+  display:flex;align-items:center;justify-content:space-between;gap:.75rem}
+.topbar-t{font-family:var(--fh);font-weight:700;font-size:.9rem;letter-spacing:.04em}
+@media(max-width:900px){.topbar-t{padding-left:3rem}}
+.live-p{display:flex;align-items:center;gap:5px;font-size:.6rem;font-family:var(--fm);
+  color:var(--c4);background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);
+  border-radius:100px;padding:3px 10px;white-space:nowrap}
+.lpd{width:5px;height:5px;border-radius:50%;background:var(--c4);animation:pulse 2s infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,.5)}50%{box-shadow:0 0 0 5px rgba(16,185,129,0)}}
+.content{padding:1.5rem clamp(1rem,3vw,2rem);flex:1}
+
+/* ── STAT CARDS ─────────────────────────────────────────── */
+.sg{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(115px,100%),1fr));gap:10px;margin-bottom:1.5rem}
+.sc{background:linear-gradient(145deg,rgba(13,21,48,.9),rgba(8,13,30,.8));
+  border:1px solid var(--b1);border-radius:var(--r);padding:1.1rem;
+  position:relative;overflow:hidden;transition:transform .25s}
+.sc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;opacity:1}
+.sc.blue::before{background:linear-gradient(90deg,var(--c1),var(--c2))}
+.sc.purple::before{background:linear-gradient(90deg,var(--c3),var(--c1))}
+.sc.green::before{background:linear-gradient(90deg,var(--c4),var(--c2))}
+.sc.amber::before{background:linear-gradient(90deg,var(--cy),var(--c3))}
+.sc.cyan::before{background:linear-gradient(90deg,var(--c2),var(--c1))}
+.sc.red::before{background:linear-gradient(90deg,var(--cr),var(--c3))}
+.sc:hover{transform:translateY(-2px)}
+.sc-l{font-size:.56rem;font-family:var(--fm);color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:.4rem}
+.sc-v{font-family:var(--fh);font-weight:700;font-size:1.75rem;letter-spacing:-.02em}
+.sc-v.blue{color:var(--c1)}.sc-v.purple{color:var(--c3)}.sc-v.green{color:var(--c4)}
+.sc-v.amber{color:var(--cy)}.sc-v.cyan{color:var(--c2)}.sc-v.red{color:var(--cr)}
+
+/* ── CARD ───────────────────────────────────────────────── */
+.card{background:linear-gradient(145deg,rgba(13,21,48,.85),rgba(8,13,30,.8));
+  border:1px solid var(--b1);border-radius:var(--r);margin-bottom:1.25rem;overflow:hidden}
+.ch{padding:.85rem 1.25rem;border-bottom:1px solid var(--b1);
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem;
+  background:rgba(79,140,255,.02)}
+.ct{font-family:var(--fh);font-weight:600;font-size:.76rem;letter-spacing:.06em;
+  display:flex;align-items:center;gap:6px}
+.cb{padding:1.25rem}
+
+/* ── PANEL TYPE BUTTONS ─────────────────────────────────── */
+.pt-btn{flex:1;min-width:90px;padding:9px 14px;border-radius:9px;
+  border:1.5px solid var(--b1);background:transparent;color:var(--m2);
+  font-family:var(--fb);font-size:.8rem;font-weight:600;cursor:pointer;
+  transition:all .22s;text-align:center;white-space:nowrap}
+.pt-btn:hover{border-color:var(--b3);color:var(--txt)}
+.pt-btn.on-login{border-color:var(--c1)!important;color:var(--c1)!important;background:rgba(79,140,255,.1)!important}
+.pt-btn.on-api  {border-color:var(--c4)!important;color:var(--c4)!important;background:rgba(16,185,129,.1)!important}
+.pt-btn.on-ivas {border-color:var(--c3)!important;color:var(--c3)!important;background:rgba(168,85,247,.1)!important}
+
+/* ══════════════════════════════════════════════════════════
+   FIELD ROW — EACH FIELD ON ITS OWN FULL-WIDTH LINE
+   All fields stack vertically, no flex-row wrapping issues
+   ══════════════════════════════════════════════════════════ */
+.field-row{display:block;margin-bottom:.9rem}
+.field-row label{display:flex;align-items:center;gap:6px;flex-wrap:wrap;
+  font-size:.6rem;font-family:var(--fm);letter-spacing:.1em;
+  color:var(--muted);text-transform:uppercase;margin-bottom:5px;line-height:1.4}
+.field-hint{text-transform:none;letter-spacing:0;color:var(--muted);font-size:.56rem;
+  background:rgba(255,255,255,.04);padding:1px 7px;border-radius:4px;font-weight:400;margin-left:2px}
+.field-row input,
+.field-row select,
+.field-row textarea{
+  display:block;
+  width:100%;
+  padding:10px 13px;
+  background:rgba(79,140,255,.04);
+  border:1px solid var(--b1);
+  border-radius:9px;
+  color:var(--txt);
+  font-family:var(--fm);
+  font-size:.82rem;
+  outline:none;
+  transition:border-color .2s,background .2s,box-shadow .2s}
+.field-row input:focus,
+.field-row select:focus,
+.field-row textarea:focus{
+  border-color:var(--b3);
+  background:rgba(79,140,255,.08);
+  box-shadow:0 0 0 3px rgba(79,140,255,.1)}
+.field-row input::placeholder,
+.field-row textarea::placeholder{color:var(--muted)}
+.field-row select option{background:var(--s2);color:var(--txt)}
+.field-row textarea{resize:vertical;min-height:80px}
+
+/* ── PANEL FORM SECTIONS ────────────────────────────────── */
+.pform{display:none}
+.pform.on{display:block}
+.pform-info{border-radius:9px;padding:.75rem 1rem;margin-bottom:1.25rem;
+  font-size:.73rem;font-family:var(--fm);line-height:1.75}
+.pfi-login{background:rgba(79,140,255,.06);border:1px solid rgba(79,140,255,.18);color:var(--m2)}
+.pfi-api  {background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.18);color:var(--m2)}
+.pfi-ivas {background:rgba(168,85,247,.06);border:1px solid rgba(168,85,247,.18);color:var(--m2)}
+
+/* ── TABLE ──────────────────────────────────────────────── */
+.tw{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;font-size:.75rem;min-width:480px}
+thead th{font-size:.56rem;font-family:var(--fm);letter-spacing:.12em;text-transform:uppercase;
+  color:var(--muted);padding:.62rem .875rem;text-align:left;border-bottom:1px solid var(--b1);
+  white-space:nowrap;background:rgba(79,140,255,.02)}
+tbody td{padding:.62rem .875rem;border-bottom:1px solid rgba(79,140,255,.04);vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:rgba(79,140,255,.02)}
+.tdm{font-family:var(--fm);font-size:.72rem}
+.tdt{max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ── BADGES ─────────────────────────────────────────────── */
+.badge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:100px;
+  font-size:.6rem;font-family:var(--fm);font-weight:500;white-space:nowrap}
+.bg-green {background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.2);color:var(--c4)}
+.bg-red   {background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);color:var(--cr)}
+.bg-blue  {background:rgba(79,140,255,.1);border:1px solid rgba(79,140,255,.2);color:var(--c1)}
+.bg-amber {background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.2);color:var(--cy)}
+.bg-gray  {background:rgba(90,106,148,.1);border:1px solid rgba(90,106,148,.2);color:var(--m2)}
+.bg-purple{background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.2);color:var(--c3)}
+.bg-cyan  {background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.18);color:var(--c2)}
+.bdot{width:4px;height:4px;border-radius:50%;display:inline-block;flex-shrink:0}
+.bdg{background:var(--c4);animation:pulse 2s infinite}.bdr{background:var(--cr)}.bdx{background:var(--muted)}
+
+/* ── BUTTONS ────────────────────────────────────────────── */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:8px;border:none;
+  font-family:var(--fb);font-size:.74rem;font-weight:600;cursor:pointer;transition:all .2s;
+  text-decoration:none;white-space:nowrap;line-height:1}
+.btn:disabled{opacity:.45;cursor:not-allowed;pointer-events:none}
+.bp {background:var(--g2);color:#fff}.bp:hover{opacity:.9;transform:translateY(-1px)}
+.bgl{background:rgba(255,255,255,.04);border:1px solid var(--b2);color:var(--m2)}
+.bgl:hover{border-color:var(--b3);color:var(--c1);background:rgba(79,140,255,.08)}
+.bda{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);color:var(--cr)}
+.bda:hover{background:rgba(239,68,68,.2)}
+.bsu{background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.2);color:var(--c4)}
+.bsu:hover{background:rgba(16,185,129,.2)}
+.bcy{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.2);color:var(--cy)}
+.bcy:hover{background:rgba(245,158,11,.2)}
+.bsm{padding:4px 10px;font-size:.66rem;border-radius:7px}
+.bfl{width:100%;justify-content:center}
+
+/* ── FLASH ──────────────────────────────────────────────── */
+.flash{padding:9px 14px;border-radius:9px;font-size:.76rem;font-family:var(--fm);
+  display:flex;align-items:center;gap:7px;margin-bottom:6px;animation:fu .4s both}
+.flash-success{background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);color:var(--c4)}
+.flash-error  {background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);color:var(--cr)}
+@keyframes fu{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── TAB PANELS ─────────────────────────────────────────── */
+.tp{display:none}.tp.on{display:block}
+
+/* ── UPLOAD ZONE ────────────────────────────────────────── */
+.upload-zone{border:2px dashed var(--b2);border-radius:var(--r);padding:1.75rem;
+  text-align:center;cursor:pointer;transition:all .3s;position:relative;margin-bottom:1rem}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--c1);background:rgba(79,140,255,.04)}
+.upload-zone input[type="file"]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.uz-icon{font-size:2rem;margin-bottom:.5rem;display:block}
+.uz-text{font-size:.8rem;color:var(--m2);margin-bottom:.2rem}
+.uz-hint{font-size:.66rem;color:var(--muted);font-family:var(--fm)}
+.uz-fname{font-size:.73rem;color:var(--c4);font-family:var(--fm);margin-top:.5rem;display:none}
+
+/* ── SMS CARDS ──────────────────────────────────────────── */
+.sms-list{display:flex;flex-direction:column;gap:8px;max-height:480px;overflow-y:auto}
+.sms-list::-webkit-scrollbar{width:4px}
+.sms-list::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px}
+.sms-card{background:rgba(13,21,48,.8);border:1px solid var(--b1);border-radius:10px;
+  padding:.875rem 1rem;display:flex;align-items:flex-start;gap:.875rem}
+.sms-flag{font-size:1.3rem;flex-shrink:0;margin-top:2px}
+.sms-body{flex:1;min-width:0}
+.sms-num{font-family:var(--fm);font-size:.78rem;color:var(--c2);margin-bottom:2px}
+.sms-from{font-size:.64rem;color:var(--muted);font-family:var(--fm);margin-bottom:4px}
+.sms-text{font-size:.83rem;color:var(--txt);line-height:1.55;word-break:break-word}
+.sms-otp{display:inline-block;margin-top:5px;font-family:var(--fm);font-size:1rem;
+  font-weight:700;color:var(--c4);background:rgba(16,185,129,.1);
+  border:1px solid rgba(16,185,129,.25);border-radius:7px;padding:2px 12px;letter-spacing:.14em}
+.sms-ts{font-size:.6rem;color:var(--muted);font-family:var(--fm);margin-top:5px}
+
+/* ── LOG BOX ────────────────────────────────────────────── */
+.log-box{background:rgba(3,5,15,.9);border:1px solid var(--b1);border-radius:9px;
+  padding:1rem;font-family:var(--fm);font-size:.7rem;color:var(--m2);
+  max-height:380px;overflow-y:auto;line-height:1.75;white-space:pre-wrap;word-break:break-all}
+.log-box::-webkit-scrollbar{width:4px}
+.log-box::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px}
+.l-err{color:var(--cr)}.l-ok{color:var(--c4)}.l-warn{color:var(--cy)}
+
+/* ── SETTING ROW ────────────────────────────────────────── */
+.setting-row{display:flex;align-items:center;justify-content:space-between;
+  padding:.875rem 0;border-bottom:1px solid var(--b1);gap:1rem;flex-wrap:wrap}
+.setting-row:last-child{border-bottom:none}
+.s-label{font-size:.82rem;font-weight:500}
+.s-desc{font-size:.7rem;color:var(--muted);font-family:var(--fm);margin-top:2px}
+.toggle{width:40px;height:22px;border-radius:11px;background:var(--b2);border:none;
+  cursor:pointer;position:relative;transition:background .2s;flex-shrink:0}
+.toggle.on{background:var(--c4)}
+.toggle::after{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;
+  border-radius:50%;background:#fff;transition:transform .2s}
+.toggle.on::after{transform:translateX(18px)}
+
+/* ── INLINE ALERT ───────────────────────────────────────── */
+.ial{padding:8px 12px;border-radius:8px;font-size:.74rem;font-family:var(--fm);
+  margin-top:.75rem;display:none}
+.ial.show{display:block}
+.ial-ok {background:rgba(16,185,129,.09);border:1px solid rgba(16,185,129,.22);color:var(--c4)}
+.ial-err{background:rgba(239,68,68,.09);border:1px solid rgba(239,68,68,.22);color:var(--cr)}
+
+/* ── FILTER PILLS ───────────────────────────────────────── */
+.fp{padding:5px 13px;border-radius:100px;border:1px solid var(--b1);background:transparent;
+  color:var(--m2);font-family:var(--fm);font-size:.68rem;cursor:pointer;transition:all .2s}
+.fp:hover,.fp.on{border-color:var(--c1);color:var(--c1);background:rgba(79,140,255,.08)}
+
+/* ── MODAL ──────────────────────────────────────────────── */
+.ov{position:fixed;inset:0;z-index:200;display:none;align-items:center;justify-content:center;
+  padding:1rem;background:rgba(3,5,15,.85);backdrop-filter:blur(16px)}
+.ov.open{display:flex}
+.modal{background:linear-gradient(145deg,#0d1530,#080d1e);border:1px solid var(--b2);
+  border-radius:16px;padding:2rem;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;
+  box-shadow:0 0 50px rgba(79,140,255,.18);animation:mI .3s ease;position:relative}
+.modal::-webkit-scrollbar{width:3px}
+.modal::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px}
+@keyframes mI{from{opacity:0;transform:scale(.92) translateY(16px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.mcl{position:absolute;top:1rem;right:1rem;background:rgba(255,255,255,.04);
+  border:1px solid var(--b1);width:28px;height:28px;border-radius:7px;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--muted);cursor:pointer;transition:all .2s;font-size:.82rem}
+.mcl:hover{background:rgba(79,140,255,.12);color:var(--txt)}
+.mtit{font-family:var(--fh);font-weight:700;font-size:1.1rem;letter-spacing:-.01em;
+  margin-bottom:.35rem;padding-right:2.5rem}
+.msub{color:var(--muted);font-size:.72rem;margin-bottom:1.25rem;font-family:var(--fm)}
+
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:rgba(79,140,255,.14);border-radius:3px}
+</style>
+</head>
+<body>
+
+<button class="mob-btn" onclick="toggleSb()" id="mbBtn">☰</button>
+
+<!-- ══ SIDEBAR ═══════════════════════════════════════════════════ -->
+<aside class="sb" id="sb">
+  <a href="/" class="sb-logo"><div class="sb-lm">⚡</div>SIGMA<span>FETCHER</span></a>
+  <div class="sb-sec">Overview</div>
+  <button class="sbi on" onclick="goTab('dashboard')"><span class="sbi-ico">📊</span>Dashboard</button>
+  <a href="/" target="_blank" class="sbi"><span class="sbi-ico">🌐</span>View Site</a>
+  <div class="sb-sec">Manage</div>
+  <button class="sbi" onclick="goTab('panels')"><span class="sbi-ico">🔌</span>Panels<span class="sb-badge">{{ stats.panels }}</span></button>
+  <button class="sbi" onclick="goTab('numbers')"><span class="sbi-ico">📱</span>Numbers<span class="sb-badge">{{ stats.numbers }}</span></button>
+  <button class="sbi" onclick="goTab('users')"><span class="sbi-ico">👥</span>Users<span class="sb-badge">{{ stats.users }}</span></button>
+  <button class="sbi" onclick="goTab('orders')"><span class="sbi-ico">📋</span>Orders<span class="sb-badge">{{ stats.orders }}</span></button>
+  <div class="sb-sec">Tools</div>
+  <button class="sbi" onclick="goTab('sms')"><span class="sbi-ico">📩</span>SMS Inbox<span class="sb-badge">{{ stats.messages }}</span></button>
+  <button class="sbi" onclick="goTab('broadcast')"><span class="sbi-ico">📢</span>Broadcast</button>
+  <button class="sbi" onclick="goTab('logs')"><span class="sbi-ico">📄</span>System Logs</button>
+  <button class="sbi" onclick="goTab('settings')"><span class="sbi-ico">⚙️</span>Settings</button>
+  <div class="sb-foot">
+    <div class="sb-uinfo"><strong>⚡ ADMIN</strong>adnannoordogar01@gmail.com</div>
+    <a href="/logout" class="btn bda bsm bfl">🚪 Log out</a>
+  </div>
+</aside>
+
+<!-- ══ MAIN ══════════════════════════════════════════════════════ -->
+<main>
+  <div class="topbar">
+    <div class="topbar-t" id="topT">📊 DASHBOARD</div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="btn bgl bsm" onclick="refreshStats()" id="refreshBtn">🔄 Refresh</button>
+      <div class="live-p"><div class="lpd"></div>LIVE</div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    {% with msgs = get_flashed_messages(with_categories=true) %}{% if msgs %}
+    <div style="margin-bottom:1.25rem">
+      {% for cat,msg in msgs %}<div class="flash flash-{{ cat }}">{{ '✓' if cat=='success' else '⚠' }} {{ msg }}</div>{% endfor %}
+    </div>{% endif %}{% endwith %}
+
+    <!-- ══ DASHBOARD ══════════════════════════════════════════ -->
+    <div class="tp on" id="tp-dashboard">
+      <div class="sg">
+        <div class="sc blue" ><div class="sc-l">🔌 Panels</div>  <div class="sc-v blue"   id="ds-panels">{{ stats.panels }}</div></div>
+        <div class="sc green"><div class="sc-l">🟢 Online</div>  <div class="sc-v green"  id="ds-online">{{ stats.online }}</div></div>
+        <div class="sc cyan" ><div class="sc-l">📱 Numbers</div> <div class="sc-v cyan"   id="ds-numbers">{{ stats.numbers }}</div></div>
+        <div class="sc purple"><div class="sc-l">✅ Free</div>   <div class="sc-v purple" id="ds-avail">{{ stats.available }}</div></div>
+        <div class="sc amber"><div class="sc-l">👥 Users</div>   <div class="sc-v amber"  id="ds-users">{{ stats.users }}</div></div>
+        <div class="sc red"  ><div class="sc-l">📩 SMS</div>     <div class="sc-v red"    id="ds-sms">{{ stats.messages }}</div></div>
+      </div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap">
+        <div class="card" style="flex:1 1 200px">
+          <div class="ch"><div class="ct">🔌 Panel Types</div></div>
+          <div class="cb" style="display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span style="font-size:.8rem">🔑 Login panels</span><span class="badge bg-blue">{{ stats.login_panels }}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span style="font-size:.8rem">🌐 API panels</span><span class="badge bg-green">{{ stats.api_panels }}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span style="font-size:.8rem">📡 IVAS panels</span><span class="badge bg-purple">{{ stats.ivas_panels }}</span>
+            </div>
+          </div>
+        </div>
+        <div class="card" style="flex:1 1 200px">
+          <div class="ch"><div class="ct">⚡ Quick Actions</div></div>
+          <div class="cb" style="display:flex;flex-direction:column;gap:8px">
+            <button class="btn bp bfl"  onclick="goTab('panels')">🔌 Add Panel</button>
+            <button class="btn bgl bfl" onclick="goTab('numbers')">📤 Upload Numbers</button>
+            <button class="btn bgl bfl" onclick="pingAll()">📡 Ping All Panels</button>
+            <button class="btn bgl bfl" onclick="goTab('broadcast')">📢 Broadcast</button>
+            <a href="/" target="_blank" class="btn bsu bfl">🌐 Public Site</a>
+          </div>
+        </div>
+        <div class="card" style="flex:1 1 200px">
+          <div class="ch"><div class="ct">📡 Panel Status</div><button class="btn bgl bsm" onclick="pingAll()">📡 Ping All</button></div>
+          <div class="cb" style="display:flex;flex-direction:column;gap:6px">
+            {% for p in panels %}
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:.4rem 0;border-bottom:1px solid var(--b1);gap:6px">
+              <div style="display:flex;align-items:center;gap:7px;min-width:0;flex:1">
+                <span>{{ '🔑' if p.panel_type=='login' else '🌐' if p.panel_type=='api' else '📡' }}</span>
+                <span class="tdm tdt" style="font-size:.74rem">{{ p.name }}</span>
+              </div>
+              <span class="badge bg-{{ 'green' if p.status=='online' else 'red' if p.status=='offline' else 'gray' }}" id="dash-pst-{{ p.id }}">
+                <span class="bdot bd{{ 'g' if p.status=='online' else 'r' if p.status=='offline' else 'x' }}"></span>{{ p.status }}
+              </span>
+            </div>
+            {% else %}<p style="color:var(--muted);font-size:.78rem">No panels yet.</p>{% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PANELS ══════════════════════════════════════════════ -->
+    <div class="tp" id="tp-panels">
+
+      <!-- ADD PANEL -->
+      <div class="card" style="margin-bottom:1.25rem">
+        <div class="ch"><div class="ct">➕ Add New Panel</div></div>
+        <div class="cb">
+
+          <!-- TYPE SELECTOR -->
+          <p style="font-size:.6rem;color:var(--muted);font-family:var(--fm);letter-spacing:.1em;text-transform:uppercase;margin-bottom:.6rem">Step 1 — Select Panel Type</p>
+          <div style="display:flex;gap:10px;margin-bottom:1.5rem;flex-wrap:wrap">
+            <button type="button" class="pt-btn on-login" id="ptb-login" onclick="setPType('login')">🔑 Login Panel</button>
+            <button type="button" class="pt-btn"          id="ptb-api"   onclick="setPType('api')">🌐 API Panel</button>
+            <button type="button" class="pt-btn"          id="ptb-ivas"  onclick="setPType('ivas')">📡 IVAS Panel</button>
+          </div>
+
+          <!-- ────── LOGIN PANEL FORM ────── -->
+          <form action="/admin/panels/add" method="POST" class="pform on" id="pform-login">
+            <input type="hidden" name="panel_type" value="login">
+            <div class="pform-info pfi-login">
+              🔑 <strong style="color:var(--c1)">Login Panel</strong> — authenticates via the panel's
+              <code>/login</code> form. Automatically discovers the <code>sAjaxSource</code> data endpoint.
+              Handles CSRF tokens and arithmetic captchas.
+            </div>
+            <div class="field-row">
+              <label>📛 Panel Name <span class="field-hint">display name</span></label>
+              <input name="name" placeholder="e.g. Hadi" required>
+            </div>
+            <div class="field-row">
+              <label>🔗 Base URL <span class="field-hint">include /ints — no trailing slash</span></label>
+              <input name="base_url" placeholder="http://185.2.83.39/ints" required>
+            </div>
+            <div class="field-row">
+              <label>👤 Username</label>
+              <input name="username" placeholder="Adnan6292" required>
+            </div>
+            <div class="field-row">
+              <label>🔒 Password</label>
+              <input name="password" type="password" placeholder="••••••••" required>
+            </div>
+            <div style="margin-top:1.1rem"><button type="submit" class="btn bp">➕ Add Login Panel</button></div>
+          </form>
+
+          <!-- ────── API PANEL FORM ────── -->
+          <form action="/admin/panels/add" method="POST" class="pform" id="pform-api">
+            <input type="hidden" name="panel_type" value="api">
+            <div class="pform-info pfi-api">
+              🌐 <strong style="color:var(--c4)">API Panel</strong> — token-based REST GET request.
+              Sends <code>token + dt1 + dt2 + records</code> params and receives a JSON list or
+              <code>{"data":[…]}</code> response.
+            </div>
+            <div class="field-row">
+              <label>📛 Panel Name <span class="field-hint">display name</span></label>
+              <input name="name" placeholder="e.g. CR-API Panel" required>
+            </div>
+            <div class="field-row">
+              <label>🔗 API Endpoint URL <span class="field-hint">full URL of the viewstats endpoint</span></label>
+              <input name="base_url" placeholder="http://147.135.212.197/crapi/had/viewstats" required>
+            </div>
+            <div class="field-row">
+              <label>🔑 API Token</label>
+              <input name="token" placeholder="R1NQRTRSQopzh1aHZHSCfmiCklpy…" required>
+            </div>
+            <div style="margin-top:1.1rem"><button type="submit" class="btn bp">➕ Add API Panel</button></div>
+          </form>
+
+          <!-- ────── IVAS PANEL FORM ────── -->
+          <form action="/admin/panels/add" method="POST" class="pform" id="pform-ivas">
+            <input type="hidden" name="panel_type" value="ivas">
+            <div class="pform-info pfi-ivas">
+              📡 <strong style="color:var(--c3)">IVAS Panel</strong> — live WebSocket push via socket.io
+              (<code>wss://</code>). SMS arrives in real-time with zero polling needed.
+              Upload numbers for this panel manually using the Numbers tab.
+            </div>
+            <div class="field-row">
+              <label>📛 Panel Name <span class="field-hint">display name</span></label>
+              <input name="name" placeholder="e.g. IVAS Main" required>
+            </div>
+            <div class="field-row">
+              <label>📡 WebSocket URI <span class="field-hint">full wss:// URI including token query param</span></label>
+              <input name="uri" placeholder="wss://ivas.tempnum.qzz.io:2087/socket.io/?token=eyJ…" required>
+            </div>
+            <div style="margin-top:1.1rem"><button type="submit" class="btn bp">➕ Add IVAS Panel</button></div>
+          </form>
+
+        </div>
+      </div>
+
+      <!-- ALL PANELS TABLE -->
+      <div class="card">
+        <div class="ch">
+          <div class="ct">🔌 All Panels</div>
+          <div style="display:flex;gap:6px;align-items:center">
+            <button class="btn bgl bsm" onclick="pingAll()">📡 Ping All</button>
+            <span style="font-size:.62rem;font-family:var(--fm);color:var(--muted)">{{ stats.panels }} total</span>
+          </div>
+        </div>
+        <div class="tw">
+          <table>
+            <thead><tr><th>Name</th><th>Type</th><th>URL / URI</th><th>Auth</th><th>Status</th><th>Numbers</th><th>Checked</th><th>Actions</th></tr></thead>
+            <tbody>
+            {% for p in panels %}
+            <tr id="pr-{{ p.id }}">
+              <td class="tdm"><strong>{{ p.name }}</strong></td>
+              <td>
+                <span class="badge bg-{{ 'blue' if p.panel_type=='login' else 'green' if p.panel_type=='api' else 'purple' }}">
+                  {{ '🔑' if p.panel_type=='login' else '🌐' if p.panel_type=='api' else '📡' }} {{ p.panel_type }}
+                </span>
+              </td>
+              <td class="tdm tdt" style="color:var(--muted)">{{ p.uri or p.base_url or '—' }}</td>
+              <td class="tdm" style="color:var(--muted);font-size:.68rem">
+                {% if p.panel_type=='login' %}{{ p.username or '—' }}
+                {% elif p.panel_type=='api' %}🔑 token
+                {% else %}📡 wss{% endif %}
+              </td>
+              <td>
+                <span class="badge bg-{{ 'green' if p.status=='online' else 'red' if p.status=='offline' else 'gray' }}" id="pst-{{ p.id }}">
+                  <span class="bdot bd{{ 'g' if p.status=='online' else 'r' if p.status=='offline' else 'x' }}"></span>{{ p.status }}
+                </span>
+              </td>
+              <td class="tdm">
+                <span style="color:var(--c2)">{{ p.numbers.filter_by(is_available=True).count() }}</span>/{{ p.numbers.count() }}
+              </td>
+              <td class="tdm" style="color:var(--muted);font-size:.65rem">{{ p.last_checked.strftime('%m/%d %H:%M') if p.last_checked else '—' }}</td>
+              <td>
+                <div style="display:flex;gap:4px;flex-wrap:wrap">
+                  <button class="btn bsu bsm" onclick="pingP({{ p.id }})">📡</button>
+                  {% if p.panel_type != 'ivas' %}
+                  <button class="btn bgl bsm" onclick="loginTestP({{ p.id }},this)">🔑 Test</button>
+                  <button class="btn bgl bsm" onclick="fetchP({{ p.id }},this)">📥 Fetch</button>
+                  {% endif %}
+                  <button class="btn bcy bsm" onclick="toggleP({{ p.id }},this)">{{ '⏸️' if p.active else '▶️' }}</button>
+                  <button class="btn bda bsm" onclick="delP({{ p.id }})">🗑️</button>
+                </div>
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="8" style="text-align:center;color:var(--muted);padding:2rem;font-family:var(--fm)">No panels yet.</td></tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ NUMBERS ═════════════════════════════════════════════ -->
+    <div class="tp" id="tp-numbers">
+      <div class="card" style="margin-bottom:1.25rem">
+        <div class="ch"><div class="ct">📤 Upload Numbers</div></div>
+        <div class="cb">
+          <div style="background:rgba(79,140,255,.05);border:1px solid var(--b1);border-radius:9px;
+            padding:.875rem 1rem;margin-bottom:1.1rem;font-family:var(--fm);font-size:.73rem;color:var(--m2);line-height:1.8">
+            📄 <strong>.txt file</strong> — one number per line.<br>
+            Optional: <code style="color:var(--c2)">+923001234567,1</code> (number,panelID).<br>
+            If no panel ID in file, select a default panel below.
+          </div>
+          <form action="/admin/numbers/upload" method="POST" enctype="multipart/form-data">
+            <div class="field-row">
+              <label>📋 Default Panel <span class="field-hint">used when file has no panel ID column</span></label>
+              <select name="panel_id">
+                <option value="">— pick from file column 2 —</option>
+                {% for p in panels %}
+                <option value="{{ p.id }}">{{ '🔑' if p.panel_type=='login' else '🌐' if p.panel_type=='api' else '📡' }} {{ p.name }} (#{{ p.id }})</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="upload-zone" id="dropZone">
+              <input type="file" name="file" id="fileInput" accept=".txt" onchange="showFile(this)">
+              <span class="uz-icon">📁</span>
+              <div class="uz-text">Click to browse or drag &amp; drop</div>
+              <div class="uz-hint">Accepts .txt files only</div>
+              <div class="uz-fname" id="uzName"></div>
+            </div>
+            <button type="submit" class="btn bp">📤 Upload Numbers</button>
+          </form>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ch">
+          <div class="ct">📱 Numbers (latest 60)</div>
+          <span style="font-size:.62rem;font-family:var(--fm);color:var(--muted)">{{ stats.available }} free / {{ stats.numbers }} total</span>
+        </div>
+        <div class="tw">
+          <table>
+            <thead><tr><th>🌍</th><th>Number</th><th>Country</th><th>Panel</th><th>Type</th><th>Status</th><th>📩</th><th>Actions</th></tr></thead>
+            <tbody>
+            {% for n in numbers %}
+            <tr id="nr-{{ n.id }}">
+              <td style="font-size:1.15rem">{{ n.country_flag or '🌐' }}</td>
+              <td class="tdm"><strong>{{ n.number }}</strong></td>
+              <td style="color:var(--m2)">{{ n.country_name or 'Unknown' }}</td>
+              <td class="tdm" style="font-size:.7rem">{{ n._panel_name }}</td>
+              <td>
+                <span class="badge bg-{{ 'blue' if n._panel_type=='login' else 'green' if n._panel_type=='api' else 'purple' if n._panel_type=='ivas' else 'gray' }}">
+                  {{ '🔑' if n._panel_type=='login' else '🌐' if n._panel_type=='api' else '📡' if n._panel_type=='ivas' else '?' }}
+                  {{ n._panel_type }}
+                </span>
+              </td>
+              <td><span class="badge bg-{{ 'green' if n.is_available else 'amber' }}" id="nst-{{ n.id }}">{{ '✅ free' if n.is_available else '🔒 used' }}</span></td>
+              <td class="tdm" style="color:var(--c2)">{{ n.messages.count() }}</td>
+              <td>
+                <div style="display:flex;gap:4px">
+                  <button class="btn bgl bsm" onclick="viewSmsModal({{ n.id }},'{{ n.number }}')">📩</button>
+                  <button class="btn bcy bsm" onclick="toggleN({{ n.id }},this)">{{ '⏸️' if n.is_available else '▶️' }}</button>
+                  <button class="btn bda bsm" onclick="delN({{ n.id }})">🗑️</button>
+                </div>
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="8" style="text-align:center;color:var(--muted);padding:2rem;font-family:var(--fm)">No numbers yet.</td></tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ USERS ════════════════════════════════════════════════ -->
+    <div class="tp" id="tp-users">
+      <div class="card">
+        <div class="ch"><div class="ct">👥 Users</div><span style="font-size:.62rem;font-family:var(--fm);color:var(--muted)">{{ stats.users }} total</span></div>
+        <div class="tw">
+          <table>
+            <thead><tr><th>Av</th><th>Username</th><th>Email</th><th>Role</th><th>Joined</th><th>Orders</th><th>Actions</th></tr></thead>
+            <tbody>
+            {% for u in users %}
+            <tr id="ur-{{ u.id }}">
+              <td style="font-size:1.1rem">{{ u.avatar or '👤' }}</td>
+              <td><strong>{{ u.username }}</strong></td>
+              <td class="tdm tdt" style="color:var(--m2)">{{ u.email }}</td>
+              <td><span class="badge bg-{{ 'blue' if u.is_admin else 'gray' }}" id="urol-{{ u.id }}">{{ '⚡ admin' if u.is_admin else '👤 user' }}</span></td>
+              <td class="tdm" style="color:var(--muted);font-size:.68rem">{{ u.created_at.strftime('%Y-%m-%d') }}</td>
+              <td class="tdm" style="color:var(--c1)">{{ u.orders.count() }}</td>
+              <td>
+                <div style="display:flex;gap:4px;flex-wrap:wrap">
+                  <button class="btn bgl bsm" onclick="toggleAdmin({{ u.id }},this)">{{ '👤 Demote' if u.is_admin else '⚡ Promote' }}</button>
+                  <button class="btn bda bsm" onclick="delU({{ u.id }})">🗑️</button>
+                </div>
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="7" style="text-align:center;color:var(--muted);padding:2rem;font-family:var(--fm)">No users yet.</td></tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ ORDERS ═══════════════════════════════════════════════ -->
+    <div class="tp" id="tp-orders">
+      <div class="card">
+        <div class="ch">
+          <div class="ct">📋 Orders</div>
+          <div style="display:flex;gap:6px;align-items:center">
+            <button class="btn bda bsm" onclick="purgeExpired()">🗑️ Purge Expired</button>
+            <span style="font-size:.62rem;font-family:var(--fm);color:var(--muted)">{{ stats.orders }} total</span>
+          </div>
+        </div>
+        <div class="tw">
+          <table>
+            <thead><tr><th>#</th><th>User</th><th>Number</th><th>Country</th><th>Panel</th><th>Status</th><th>SMS</th><th>Created</th></tr></thead>
+            <tbody>
+            {% for o in orders %}
+            <tr id="ord-{{ o.id }}">
+              <td class="tdm" style="color:var(--muted)">#{{ o.id }}</td>
+              <td class="tdm">{{ o._uname }}</td>
+              <td class="tdm">{{ o._num }}</td>
+              <td>{{ o._country }}</td>
+              <td class="tdm" style="font-size:.7rem">{{ o._panel }}</td>
+              <td><span class="badge bg-{{ 'green' if o.status=='active' else 'gray' }}">{{ '🟢 active' if o.status=='active' else '⚫ '+o.status }}</span></td>
+              <td>
+                {% if o.virtual_number %}
+                <button class="btn bgl bsm" onclick="viewSmsModal({{ o.virtual_number.id }},'{{ o._num }}')">📩 {{ o.virtual_number.messages.count() }}</button>
+                {% else %}—{% endif %}
+              </td>
+              <td class="tdm" style="color:var(--muted);font-size:.65rem">{{ o.created_at.strftime('%m/%d %H:%M') }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="8" style="text-align:center;color:var(--muted);padding:2rem;font-family:var(--fm)">No orders yet.</td></tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ SMS INBOX ════════════════════════════════════════════ -->
+    <div class="tp" id="tp-sms">
+      <div class="card">
+        <div class="ch">
+          <div class="ct">📩 SMS Inbox</div>
+          <button class="btn bgl bsm" onclick="loadSmsInbox()">🔄 Refresh</button>
+        </div>
+        <div class="cb">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1rem">
+            <input type="text" id="smsSearch" placeholder="🔍 Search number or message…"
+              style="flex:1;min-width:180px;padding:7px 12px;background:rgba(79,140,255,.04);
+                border:1px solid var(--b1);border-radius:9px;color:var(--txt);
+                font-family:var(--fm);font-size:.78rem;outline:none"
+              oninput="renderInbox()">
+            <button class="fp on" onclick="setInboxFilter('all',this)">📩 All</button>
+            <button class="fp"    onclick="setInboxFilter('otp',this)">🔑 OTPs</button>
+            <button class="fp"    onclick="setInboxFilter('nonotp',this)">📄 No OTP</button>
+          </div>
+          <div class="sms-list" id="smsInboxList">
+            <div style="text-align:center;color:var(--muted);padding:2rem;font-family:var(--fm);font-size:.78rem">
+              Click 🔄 Refresh to load messages
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ BROADCAST ════════════════════════════════════════════ -->
+    <div class="tp" id="tp-broadcast">
+      <div style="display:flex;gap:12px;flex-wrap:wrap">
+        <div class="card" style="flex:1 1 300px">
+          <div class="ch"><div class="ct">📢 Send Broadcast</div></div>
+          <div class="cb">
+            <div style="background:rgba(245,158,11,.05);border:1px solid rgba(245,158,11,.15);border-radius:9px;
+              padding:.75rem 1rem;margin-bottom:1.1rem;font-size:.73rem;font-family:var(--fm);color:var(--m2)">
+              ⚠️ Sends a site notification to all registered users on their next visit.
+            </div>
+            <div class="field-row">
+              <label>🎯 Target Audience</label>
+              <select id="bcTarget">
+                <option value="all">👥 All Users</option>
+                <option value="active">✅ Users with Active Orders Only</option>
+              </select>
+            </div>
+            <div class="field-row">
+              <label>📝 Title <span class="field-hint">optional</span></label>
+              <input type="text" id="bcTitle" placeholder="System Maintenance" maxlength="80" oninput="updatePreview()">
+            </div>
+            <div class="field-row">
+              <label>💬 Message</label>
+              <textarea id="bcMsg" placeholder="Type your message…" maxlength="500" oninput="updatePreview()"></textarea>
+            </div>
+            <div style="font-size:.6rem;color:var(--muted);font-family:var(--fm);letter-spacing:.08em;margin-bottom:.4rem;margin-top:.5rem">PREVIEW</div>
+            <div id="bcPreview" style="background:rgba(79,140,255,.04);border:1px solid var(--b1);
+              border-radius:9px;padding:.875rem 1rem;font-size:.8rem;font-family:var(--fm);
+              color:var(--m2);min-height:60px;white-space:pre-wrap;line-height:1.6">
+              Your message will appear here…
+            </div>
+            <button class="btn bp" style="margin-top:1rem" onclick="sendBroadcast()">📢 Send</button>
+            <div class="ial ial-ok"  id="bcOk" ></div>
+            <div class="ial ial-err" id="bcErr"></div>
+          </div>
+        </div>
+        <div class="card" style="flex:1 1 180px">
+          <div class="ch"><div class="ct">📊 Audience</div></div>
+          <div class="cb" style="display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;justify-content:space-between"><span style="font-size:.8rem">Total users</span><span class="badge bg-blue">{{ stats.users }}</span></div>
+            <div style="display:flex;justify-content:space-between"><span style="font-size:.8rem">Active orders</span><span class="badge bg-green">{{ stats.orders }}</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ LOGS ══════════════════════════════════════════════════ -->
+    <div class="tp" id="tp-logs">
+      <div class="card">
+        <div class="ch">
+          <div class="ct">📄 System Logs</div>
+          <div style="display:flex;gap:6px">
+            <button class="btn bgl bsm" onclick="loadLogs()">🔄 Load</button>
+            <button class="btn bda bsm" onclick="clearLogs()">🗑️ Clear</button>
+          </div>
+        </div>
+        <div class="cb">
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:.875rem">
+            <button class="fp on" onclick="filterLog('all',this)">📄 All</button>
+            <button class="fp"    onclick="filterLog('error',this)">❌ Errors</button>
+            <button class="fp"    onclick="filterLog('warn',this)">⚠️ Warnings</button>
+            <button class="fp"    onclick="filterLog('info',this)">📌 Info</button>
+          </div>
+          <div class="log-box" id="logBox">Click 🔄 Load to show logs…</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ SETTINGS ═════════════════════════════════════════════ -->
+    <div class="tp" id="tp-settings">
+      <div style="display:flex;gap:12px;flex-wrap:wrap">
+
+        <div class="card" style="flex:1 1 260px">
+          <div class="ch"><div class="ct">⚙️ Site Settings</div></div>
+          <div class="cb">
+            <div class="setting-row">
+              <div><div class="s-label">🔒 Login Required to Browse</div><div class="s-desc">Hide numbers from logged-out visitors</div></div>
+              <button class="toggle" onclick="this.classList.toggle('on')"></button>
+            </div>
+            <div class="setting-row">
+              <div><div class="s-label">📱 Show Panel Name on Cards</div><div class="s-desc">Display panel name under each number</div></div>
+              <button class="toggle on" onclick="this.classList.toggle('on')"></button>
+            </div>
+            <div class="setting-row">
+              <div><div class="s-label">⏱️ Auto-release After 20 min</div><div class="s-desc">Return unused numbers to pool on expiry</div></div>
+              <button class="toggle on" onclick="this.classList.toggle('on')"></button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="flex:1 1 260px">
+          <div class="ch"><div class="ct">🔑 Change Admin Password</div></div>
+          <div class="cb">
+            <div class="ial ial-ok"  id="pwOk" ></div>
+            <div class="ial ial-err" id="pwErr"></div>
+            <div class="field-row"><label>🔒 Current Password</label><input type="password" id="pwCur" placeholder="Current password"></div>
+            <div class="field-row"><label>🔑 New Password <span class="field-hint">min 6 chars</span></label><input type="password" id="pwNew" placeholder="New password"></div>
+            <div class="field-row"><label>✅ Confirm New Password</label><input type="password" id="pwConf" placeholder="Confirm new password"></div>
+            <button class="btn bp" onclick="changePassword()">💾 Update Password</button>
+          </div>
+        </div>
+
+        <div class="card" style="flex:1 1 220px">
+          <div class="ch"><div class="ct">🖥️ System</div></div>
+          <div class="cb" style="display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:.8rem">Version</span><span class="badge bg-blue">V10</span></div>
+            <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:.8rem">Panel types</span><span style="font-size:.7rem;color:var(--m2);font-family:var(--fm)">Login · API · IVAS</span></div>
+            <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:.8rem">SMS total</span><span class="badge bg-red">{{ stats.messages }}</span></div>
+            <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:.8rem">Orders total</span><span class="badge bg-amber">{{ stats.orders }}</span></div>
+            <div style="height:1px;background:var(--b1)"></div>
+            <button class="btn bda bfl" onclick="purgeExpired()">🗑️ Purge Expired Orders</button>
+            <button class="btn bda bfl" onclick="purgeAllSms()">🗑️ Purge All SMS Records</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</main>
+
+<!-- SMS VIEWER MODAL -->
+<div class="ov" id="smsViewOv" onclick="if(event.target===this)closeM('smsViewOv')">
+  <div class="modal" style="max-width:500px">
+    <button class="mcl" onclick="closeM('smsViewOv')">✕</button>
+    <div class="mtit" id="smsViewTitle">📩 SMS Messages</div>
+    <div class="msub"  id="smsViewSub">loading…</div>
+    <div class="sms-list" id="smsViewList" style="max-height:400px"></div>
+  </div>
+</div>
+
+<script>
+// ── TABS ──────────────────────────────────────────────────────────
+const TABS=['dashboard','panels','numbers','users','orders','sms','broadcast','logs','settings'];
+const TT={dashboard:'📊 DASHBOARD',panels:'🔌 PANELS',numbers:'📱 NUMBERS',
+  users:'👥 USERS',orders:'📋 ORDERS',sms:'📩 SMS INBOX',
+  broadcast:'📢 BROADCAST',logs:'📄 LOGS',settings:'⚙️ SETTINGS'};
+
+function goTab(name){
+  TABS.forEach(t=>document.getElementById('tp-'+t)?.classList.toggle('on',t===name));
+  document.querySelectorAll('.sbi').forEach(b=>b.classList.remove('on'));
+  // match sidebar button
+  document.querySelectorAll('button.sbi, a.sbi').forEach(b=>{
+    const txt=b.textContent.trim().toLowerCase();
+    if(txt.includes(TT[name]?.toLowerCase().replace(/[📊🔌📱👥📋📩📢📄⚙️]/g,'').trim().toLowerCase()||name))
+      b.classList.add('on');
+  });
+  document.getElementById('topT').textContent=TT[name]||name.toUpperCase();
+  history.replaceState(null,'','#'+name);
+  if(window.innerWidth<=900)document.getElementById('sb').classList.remove('open');
+  if(name==='sms')  loadSmsInbox();
+  if(name==='logs') loadLogs();
+}
+
+// ── SIDEBAR MOBILE ────────────────────────────────────────────────
+function toggleSb(){document.getElementById('sb').classList.toggle('open')}
+document.addEventListener('click',e=>{
+  const sb=document.getElementById('sb'),mb=document.getElementById('mbBtn');
+  if(sb.classList.contains('open')&&!sb.contains(e.target)&&!mb?.contains(e.target))
+    sb.classList.remove('open');
+});
+
+// ════════════════════════════════════════════════════════════════
+//  PANEL TYPE SWITCHER
+//  Each panel type has its own <form> with class .pform
+//  setPType() simply toggles which form has class .on
+// ════════════════════════════════════════════════════════════════
+const PTYPES = ['login','api','ivas'];
+function setPType(type){
+  PTYPES.forEach(t=>{
+    // selector button
+    const b = document.getElementById('ptb-'+t);
+    if(b) b.className = 'pt-btn' + (t===type ? ' on-'+t : '');
+    // form section
+    const f = document.getElementById('pform-'+t);
+    if(f){ f.classList.toggle('on', t===type); }
+  });
+}
+
+// ── SAFE FETCH ────────────────────────────────────────────────────
+async function sf(url,opts={}){
+  try{
+    const r=await fetch(url,{...opts,credentials:'same-origin',
+      headers:{'Content-Type':'application/json',...(opts.headers||{})}});
+    try{return await r.json();}catch(_){return{ok:false,error:`HTTP ${r.status}`};}
+  }catch(e){return{ok:false,error:e.message};}
+}
+
+// ── PANEL ACTIONS ─────────────────────────────────────────────────
+async function pingP(id){
+  const els=[document.getElementById('pst-'+id),document.getElementById('dash-pst-'+id)];
+  els.forEach(e=>{if(e)e.innerHTML='⏳'});
+  const d=await sf(`/admin/panels/${id}/ping`,{method:'POST'});
+  const g=d.status==='online',cls=g?'green':'red';
+  els.forEach(e=>{if(e){e.className=`badge bg-${cls}`;e.innerHTML=`<span class="bdot bd${g?'g':'r'}"></span>${d.status}`;}});
+}
+async function pingAll(){
+  const btn=document.getElementById('refreshBtn');
+  btn.disabled=true;btn.textContent='⏳ Pinging…';
+  const ids=[...document.querySelectorAll('[id^="pst-"]')].map(e=>e.id.replace('pst-',''));
+  await Promise.all(ids.map(id=>pingP(Number(id))));
+  btn.disabled=false;btn.textContent='🔄 Refresh';
+}
+async function loginTestP(id,btn){
+  btn.disabled=true;btn.textContent='🔄';
+  const d=await sf(`/admin/panels/${id}/login_test`,{method:'POST'});
+  btn.disabled=false;btn.textContent='🔑 Test';
+  alert(d.message||(d.ok?'✓ Login OK':'✗ FAILED — check credentials/URL'));
+  if(d.ok){const el=document.getElementById('pst-'+id);if(el){el.className='badge bg-green';el.innerHTML='<span class="bdot bdg"></span>online';}}
+}
+async function fetchP(id,btn){
+  btn.disabled=true;btn.textContent='⏳';
+  const d=await sf(`/admin/panels/${id}/fetch`,{method:'POST'});
+  btn.disabled=false;btn.textContent='📥 Fetch';
+  alert(d.ok?`✓ Added ${d.added} numbers (${d.total} fetched total).`:`✗ ${d.error||'Failed'}`);
+  if(d.ok&&d.added>0)setTimeout(()=>location.reload(),500);
+}
+async function toggleP(id,btn){
+  const d=await sf(`/admin/panels/${id}/toggle`,{method:'POST'});
+  btn.textContent=d.active?'⏸️':'▶️';
+}
+async function delP(id){
+  if(!confirm('Delete this panel and ALL its numbers? Cannot be undone.'))return;
+  const d=await sf(`/admin/panels/${id}/delete`,{method:'POST'});
+  if(d.ok)document.getElementById('pr-'+id)?.remove();
+}
+
+// ── NUMBER ACTIONS ────────────────────────────────────────────────
+async function toggleN(id,btn){
+  const d=await sf(`/admin/numbers/${id}/toggle`,{method:'POST'});
+  btn.textContent=d.available?'⏸️':'▶️';
+  const el=document.getElementById('nst-'+id);
+  if(el){el.className=`badge bg-${d.available?'green':'amber'}`;el.textContent=d.available?'✅ free':'🔒 used';}
+}
+async function delN(id){
+  if(!confirm('Delete this number?'))return;
+  await sf(`/admin/numbers/${id}/delete`,{method:'POST'});
+  document.getElementById('nr-'+id)?.remove();
+}
+
+// ── USER ACTIONS ──────────────────────────────────────────────────
+async function toggleAdmin(id,btn){
+  const d=await sf(`/admin/users/${id}/toggle_admin`,{method:'POST'});
+  btn.textContent=d.is_admin?'👤 Demote':'⚡ Promote';
+  const el=document.getElementById('urol-'+id);
+  if(el){el.className=`badge bg-${d.is_admin?'blue':'gray'}`;el.textContent=d.is_admin?'⚡ admin':'👤 user';}
+}
+async function delU(id){
+  if(!confirm('Delete this user and all their orders?'))return;
+  await sf(`/admin/users/${id}/delete`,{method:'POST'});
+  document.getElementById('ur-'+id)?.remove();
+}
+
+// ── SMS VIEWER ────────────────────────────────────────────────────
+async function viewSmsModal(nid,num){
+  document.getElementById('smsViewTitle').textContent=`📩 SMS — ${num}`;
+  document.getElementById('smsViewSub').textContent='Loading…';
+  document.getElementById('smsViewList').innerHTML='';
+  document.getElementById('smsViewOv').classList.add('open');
+  const d=await sf(`/api/sms/${nid}`);
+  if(!d.ok||!d.messages?.length){
+    document.getElementById('smsViewSub').textContent='No messages for this number yet.';return;
+  }
+  document.getElementById('smsViewSub').textContent=`${d.messages.length} message(s)`;
+  document.getElementById('smsViewList').innerHTML=renderSmsCards(d.messages,'','');
+}
+
+function renderSmsCards(msgs, numField, flagField){
+  return msgs.map(m=>{
+    const otp=(m.message||'').match(/\b\d{4,8}\b/)?.[0];
+    return `<div class="sms-card">
+      ${flagField?`<div class="sms-flag">${m[flagField]||'🌐'}</div>`:''}
+      <div class="sms-body">
+        ${numField&&m[numField]?`<div class="sms-num">${m[numField]}</div>`:''}
+        <div class="sms-from">📨 ${m.sender||'UNKNOWN'}</div>
+        <div class="sms-text">${m.message||''}</div>
+        ${otp?`<div class="sms-otp">🔑 ${otp}</div>`:''}
+        <div class="sms-ts">🕐 ${new Date(m.received_at).toLocaleString()}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── SMS INBOX TAB ─────────────────────────────────────────────────
+let _smsData=[], _smsFilter='all';
+async function loadSmsInbox(){
+  const list=document.getElementById('smsInboxList');
+  list.innerHTML='<div style="text-align:center;color:var(--muted);padding:2rem;font-family:var(--fm);font-size:.78rem">⏳ Loading…</div>';
+  const d=await sf('/api/admin/sms_inbox');
+  _smsData=d.messages||[];
+  renderInbox();
+}
+function renderInbox(){
+  const q=(document.getElementById('smsSearch')?.value||'').toLowerCase();
+  let msgs=_smsData;
+  if(_smsFilter==='otp')    msgs=msgs.filter(m=>(m.message||'').match(/\b\d{4,8}\b/));
+  if(_smsFilter==='nonotp') msgs=msgs.filter(m=>!(m.message||'').match(/\b\d{4,8}\b/));
+  if(q) msgs=msgs.filter(m=>(m.number||'').includes(q)||(m.message||'').toLowerCase().includes(q));
+  const list=document.getElementById('smsInboxList');
+  if(!msgs.length){list.innerHTML='<div style="text-align:center;color:var(--muted);padding:2rem;font-family:var(--fm);font-size:.78rem">No messages match.</div>';return;}
+  list.innerHTML=msgs.map(m=>{
+    const otp=(m.message||'').match(/\b\d{4,8}\b/)?.[0];
+    return `<div class="sms-card">
+      <div class="sms-flag">${m.flag||'🌐'}</div>
+      <div class="sms-body">
+        <div class="sms-num">${m.number||'—'}</div>
+        <div class="sms-from">📨 ${m.sender||'?'} · ${m.panel||'—'}</div>
+        <div class="sms-text">${m.message||''}</div>
+        ${otp?`<div class="sms-otp">🔑 ${otp}</div>`:''}
+        <div class="sms-ts">🕐 ${new Date(m.received_at).toLocaleString()}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+function setInboxFilter(f,btn){
+  _smsFilter=f;
+  document.querySelectorAll('#tp-sms .fp').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');renderInbox();
+}
+
+// ── BROADCAST ─────────────────────────────────────────────────────
+function updatePreview(){
+  const t=document.getElementById('bcTitle').value;
+  const m=document.getElementById('bcMsg').value;
+  document.getElementById('bcPreview').textContent=(t?'📢 '+t+'\n\n':'')+m||'Your message will appear here…';
+}
+async function sendBroadcast(){
+  const title=document.getElementById('bcTitle').value.trim();
+  const msg=document.getElementById('bcMsg').value.trim();
+  const ok=document.getElementById('bcOk'),err=document.getElementById('bcErr');
+  ok.classList.remove('show');err.classList.remove('show');
+  if(!msg){err.textContent='Message is required.';err.classList.add('show');return;}
+  const d=await sf('/api/admin/broadcast',{method:'POST',
+    body:JSON.stringify({title,message:msg,target:document.getElementById('bcTarget').value})});
+  if(d.ok){ok.textContent='✓ Broadcast sent!';ok.classList.add('show');}
+  else{err.textContent=d.error||'Failed';err.classList.add('show');}
+}
+
+// ── LOGS ──────────────────────────────────────────────────────────
+let _logRaw='',_logFilter='all';
+async function loadLogs(){
+  document.getElementById('logBox').textContent='⏳ Loading…';
+  const d=await sf('/api/admin/logs');
+  _logRaw=d.log||'No log data.';renderLog();
+}
+function renderLog(){
+  const lines=_logRaw.split('\n');
+  const filtered=_logFilter==='all'?lines:lines.filter(l=>l.toLowerCase().includes(_logFilter));
+  document.getElementById('logBox').innerHTML=filtered.map(l=>{
+    const ll=l.toLowerCase();
+    if(ll.includes('error')||ll.includes('❌'))return`<span class="l-err">${l}</span>`;
+    if(ll.includes('warn') ||ll.includes('⚠')) return`<span class="l-warn">${l}</span>`;
+    if(ll.includes('✓')||ll.includes('✅'))    return`<span class="l-ok">${l}</span>`;
+    return l;
+  }).join('\n');
+  document.getElementById('logBox').scrollTop=9999;
+}
+function filterLog(f,btn){
+  _logFilter=f;
+  document.querySelectorAll('#tp-logs .fp').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');renderLog();
+}
+async function clearLogs(){
+  if(!confirm('Clear all logs?'))return;
+  await sf('/api/admin/logs/clear',{method:'POST'});
+  document.getElementById('logBox').textContent='Logs cleared.';_logRaw='';
+}
+
+// ── SETTINGS ACTIONS ──────────────────────────────────────────────
+async function changePassword(){
+  const cur=document.getElementById('pwCur').value;
+  const nw=document.getElementById('pwNew').value;
+  const conf=document.getElementById('pwConf').value;
+  const ok=document.getElementById('pwOk'),err=document.getElementById('pwErr');
+  ok.classList.remove('show');err.classList.remove('show');
+  if(!cur||!nw){err.textContent='All fields required.';err.classList.add('show');return;}
+  if(nw.length<6){err.textContent='New password must be ≥6 characters.';err.classList.add('show');return;}
+  if(nw!==conf){err.textContent='Passwords do not match.';err.classList.add('show');return;}
+  const d=await sf('/api/admin/change_password',{method:'POST',body:JSON.stringify({current_password:cur,new_password:nw})});
+  if(d.ok){ok.textContent='✓ Password updated.';ok.classList.add('show');
+    ['pwCur','pwNew','pwConf'].forEach(id=>document.getElementById(id).value='');}
+  else{err.textContent=d.error||'Failed.';err.classList.add('show');}
+}
+async function purgeExpired(){
+  if(!confirm('Purge all expired/cancelled orders and free their numbers?'))return;
+  const d=await sf('/api/admin/purge_expired',{method:'POST'});
+  alert(d.ok?`✓ Purged ${d.count} expired orders.`:`Error: ${d.error}`);
+  if(d.ok)setTimeout(()=>location.reload(),500);
+}
+async function purgeAllSms(){
+  if(!confirm('Delete ALL SMS records? This cannot be undone.'))return;
+  const d=await sf('/api/admin/purge_sms',{method:'POST'});
+  alert(d.ok?'✓ All SMS records deleted.':'Error: '+d.error);
+  if(d.ok)setTimeout(()=>location.reload(),500);
+}
+
+// ── REFRESH STATS ─────────────────────────────────────────────────
+async function refreshStats(){
+  const btn=document.getElementById('refreshBtn');
+  btn.disabled=true;btn.textContent='⏳';
+  const d=await sf('/api/admin/stats');
+  if(d&&d.panels!==undefined){
+    const m={panels:'ds-panels',online:'ds-online',numbers:'ds-numbers',
+      available:'ds-avail',users:'ds-users',messages:'ds-sms'};
+    Object.entries(m).forEach(([k,id])=>{const el=document.getElementById(id);if(el)el.textContent=d[k]??el.textContent;});
+  }
+  btn.disabled=false;btn.textContent='🔄 Refresh';
+}
+
+// ── UPLOAD ZONE ───────────────────────────────────────────────────
+function showFile(input){
+  const dz=document.getElementById('dropZone');
+  const nn=document.getElementById('uzName');
+  if(input.files.length){
+    nn.style.display='flex';nn.textContent='📄 '+input.files[0].name;
+    dz.style.borderColor='var(--c4)';dz.style.background='rgba(16,185,129,.04)';
+  }
+}
+const _dz=document.getElementById('dropZone');
+_dz?.addEventListener('dragover',e=>{e.preventDefault();_dz.classList.add('drag')});
+_dz?.addEventListener('dragleave',()=>_dz.classList.remove('drag'));
+_dz?.addEventListener('drop',e=>{
+  e.preventDefault();_dz.classList.remove('drag');
+  const fi=document.getElementById('fileInput');
+  if(e.dataTransfer.files.length){
+    // Can't set fi.files directly in all browsers; trigger click workaround not needed
+    // just show name
+    document.getElementById('uzName').style.display='flex';
+    document.getElementById('uzName').textContent='📄 '+e.dataTransfer.files[0].name;
+    _dz.style.borderColor='var(--c4)';
+  }
+});
+
+// ── MODAL ─────────────────────────────────────────────────────────
+function closeM(id){document.getElementById(id).classList.remove('open')}
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape')document.querySelectorAll('.ov.open').forEach(o=>o.classList.remove('open'));
+});
+
+// ── INIT ──────────────────────────────────────────────────────────
+const _h=location.hash.replace('#','');
+if(TABS.includes(_h))goTab(_h);
+else{ // keep dashboard sbi active
+  document.querySelector('.sbi')?.classList.add('on');
+}
+</script>
+</body>
+</html>
